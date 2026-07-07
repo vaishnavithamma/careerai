@@ -110,7 +110,7 @@
 <body>
 <div class="dash-wrap">
   <aside class="sidebar">
-    <a href="/home.html" class="logo" style="margin-bottom:12px;">
+    <a href="/" class="logo" style="margin-bottom:12px;">
       <div class="logo-mark gradient-brand">C</div>
       <span>CareerPilot</span>
     </a>
@@ -449,26 +449,23 @@
     try {
       const parsed = await parseResumeFile(file);
       
-      // Upsert to Supabase
-      const { data, error } = await supabase
-        .from('resumes')
-        .upsert({
-          user_id: user.id,
-          name: parsed.name,
-          email: parsed.email,
-          skills: parsed.skills,
-          experience: parsed.experience,
-          education: parsed.education,
-          projects: parsed.projects,
-          raw_text: parsed.raw_text,
-          resume_score: parsed.resume_score,
-          readiness_score: parsed.readiness_score,
-          updated_at: new Date().toISOString()
-        });
+      // Save to LocalStorage (Mock DB)
+      const resumeDoc = {
+        user_id: user.id,
+        name: parsed.name,
+        email: parsed.email,
+        skills: parsed.skills,
+        experience: parsed.experience,
+        education: parsed.education,
+        projects: parsed.projects,
+        raw_text: parsed.raw_text,
+        resume_score: parsed.resume_score,
+        readiness_score: parsed.readiness_score,
+        updated_at: new Date().toISOString()
+      };
+      localStorage.setItem(`mock_resume_${user.id}`, JSON.stringify(resumeDoc));
       
-      if (error) throw error;
-      
-      toast('Resume parsed and synchronized successfully!');
+      toast('Resume parsed and saved locally successfully!');
       await loadResumeData();
       switchTab('dashboard');
     } catch (err) {
@@ -482,13 +479,9 @@
   // 5. Load Resume Data & Populate Views
   async function loadResumeData() {
     try {
-      const { data, error } = await supabase
-        .from('resumes')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (error) throw error;
+      // Fetch from LocalStorage (Mock DB)
+      const stored = localStorage.getItem(`mock_resume_${user.id}`);
+      let data = stored ? JSON.parse(stored) : null;
 
       if (data) {
         currentResumeData = data;

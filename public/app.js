@@ -55,49 +55,29 @@ export function initNav() {
   window.addEventListener('scroll', onScroll, { passive: true });
 }
 
-// -------- Auth actions --------
+// -------- Auth actions (Mocked for testing) --------
 export async function signInWithGoogle() {
-  try {
-    const result = await lovableAuth.signInWithOAuth('google', {
-      redirect_uri: window.location.origin + '/dashboard.html'
-    });
-    if (result.error) { toast(result.error.message || 'Google sign-in failed', 'error'); return; }
-    if (result.redirected) return; // browser will navigate
-    // Popup flow returned tokens
-    if (result.tokens) {
-      await supabase.auth.setSession(result.tokens);
-      toast('Welcome!');
-      window.location.href = '/dashboard.html';
-    }
-  } catch (e) {
-    toast(e.message || 'Google sign-in error', 'error');
-  }
+  localStorage.setItem('mock_user', JSON.stringify({ id: 'mock-1', email: 'google@test.com' }));
+  window.location.href = '/dashboard.html';
 }
 
 export async function signInWithEmail(email, password) {
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) throw error;
+  localStorage.setItem('mock_user', JSON.stringify({ id: 'mock-1', email }));
 }
 
 export async function signUpWithEmail(email, password, fullName) {
-  const { error } = await supabase.auth.signUp({
-    email, password,
-    options: {
-      emailRedirectTo: window.location.origin + '/dashboard.html',
-      data: { full_name: fullName }
-    }
-  });
-  if (error) throw error;
+  localStorage.setItem('mock_user', JSON.stringify({ id: 'mock-1', email, user_metadata: { full_name: fullName } }));
 }
 
 export async function signOut() {
-  await supabase.auth.signOut();
-  window.location.href = '/home.html';
+  localStorage.removeItem('mock_user');
+  window.location.href = '/';
 }
 
 export async function getUser() {
-  const { data } = await supabase.auth.getUser();
-  return data.user;
+  const userStr = localStorage.getItem('mock_user');
+  if (userStr) return JSON.parse(userStr);
+  return null;
 }
 
 export async function requireUser() {

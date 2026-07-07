@@ -16,7 +16,7 @@
 <body>
 <header class="nav">
   <div class="container nav-inner">
-    <a href="/home.html" class="logo">
+    <a href="/" class="logo">
       <div class="logo-mark gradient-brand">C</div>
       <span>CareerPilot <span class="gradient-text">AI</span></span>
     </a>
@@ -162,7 +162,11 @@
 </footer>
 
 <script type="module">
-  import { animateCounter } from '/app.js';
+  import { animateCounter, getUser } from '/app.js';
+  
+  // If already signed in (e.g. after OAuth redirect), jump to dashboard
+  getUser().then(u => { if (u) window.location.href = '/dashboard.html'; });
+
   window.addEventListener('load', () => {
     document.querySelectorAll('[data-count]').forEach(el => {
       animateCounter(el, Number(el.dataset.count));
