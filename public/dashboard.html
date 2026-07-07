@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Dashboard — CareerPilot AI</title>
+<meta name="description" content="Your CareerPilot AI dashboard: readiness score, matches, roadmap." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+<div class="dash-wrap">
+  <aside class="sidebar">
+    <a href="/home.html" class="logo" style="margin-bottom:12px;">
+      <div class="logo-mark gradient-brand">C</div>
+      <span>CareerPilot</span>
+    </a>
+    <div class="sidebar-title">Workspace</div>
+    <a href="#" class="side-link active">📊 Dashboard</a>
+    <a href="#" class="side-link">📄 Resume</a>
+    <a href="#" class="side-link">🎯 Job matches</a>
+    <a href="#" class="side-link">🧭 Roadmap</a>
+    <a href="#" class="side-link">🤖 AI Mentor</a>
+    <div class="sidebar-title" style="margin-top:auto;">Account</div>
+    <a href="#" class="side-link">⚙️ Settings</a>
+    <button class="side-link" id="signOutBtn" style="text-align:left;">↪ Sign out</button>
+  </aside>
+
+  <main class="dash-main">
+    <div class="dash-head">
+      <div>
+        <h1>Welcome back, <span id="userName" class="gradient-text">there</span> 👋</h1>
+        <p>Here's what needs your attention today.</p>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-ghost" data-theme-toggle aria-label="Toggle theme"></button>
+        <button class="btn btn-outline">🔔 Notifications</button>
+        <button class="btn btn-primary">+ Update resume</button>
+      </div>
+    </div>
+
+    <div class="grid-3">
+      <div class="card">
+        <div class="score-ring">
+          <svg class="ring-svg" viewBox="0 0 120 120">
+            <defs><linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#06b6d4"/>
+            </linearGradient></defs>
+            <circle class="ring-track" cx="60" cy="60" r="52" fill="none" stroke-width="12"/>
+            <circle class="ring-fill" cx="60" cy="60" r="52" fill="none" stroke-width="12"
+              stroke-dasharray="327" stroke-dashoffset="327" id="ringFill"
+              transform="rotate(-90 60 60)"/>
+          </svg>
+          <div class="score-text">
+            <div class="score-num" id="scoreNum">0</div>
+            <div class="score-label">Career Readiness</div>
+            <div class="metric-trend">↑ 12 this week</div>
+          </div>
+        </div>
+      </div>
+      <div class="card metric">
+        <div class="metric-label">Resume score</div>
+        <div class="metric-val" data-count="82" data-suffix="%">0%</div>
+        <div class="progress"><div class="progress-bar" style="width:82%;"></div></div>
+        <div class="metric-trend">↑ 6% vs last week</div>
+      </div>
+      <div class="card metric">
+        <div class="metric-label">Skills mapped</div>
+        <div class="metric-val" data-count="24">0</div>
+        <div class="progress"><div class="progress-bar" style="width:60%;"></div></div>
+        <div class="metric-trend">+3 this week</div>
+      </div>
+      <div class="card metric">
+        <div class="metric-label">Job matches</div>
+        <div class="metric-val" data-count="47">0</div>
+        <div class="progress"><div class="progress-bar" style="width:90%;"></div></div>
+        <div class="metric-trend">+8 today</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3 style="font-weight:700;font-size:16px;margin-bottom:16px;display:flex;justify-content:space-between;">
+          Top matched roles <a href="#" style="color:var(--brand);font-size:13px;">View all</a>
+        </h3>
+        <div class="job-item">
+          <div>
+            <div class="job-title">Senior Product Designer</div>
+            <div class="job-meta">Stripe • Remote • $140k–$180k</div>
+          </div>
+          <span class="badge badge-hot">96% match</span>
+        </div>
+        <div class="job-item">
+          <div>
+            <div class="job-title">Full-Stack Engineer</div>
+            <div class="job-meta">Linear • Hybrid • $150k–$200k</div>
+          </div>
+          <span class="badge badge-new">92% match</span>
+        </div>
+        <div class="job-item">
+          <div>
+            <div class="job-title">AI Product Manager</div>
+            <div class="job-meta">Notion • Remote • $160k–$210k</div>
+          </div>
+          <span class="badge badge-new">89% match</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="font-weight:700;font-size:16px;margin-bottom:16px;">This week's roadmap</h3>
+        <div class="task-item">
+          <div class="checkbox done">✓</div>
+          <div style="flex:1;">
+            <div class="job-title" style="text-decoration:line-through;color:var(--muted);">Complete resume optimization</div>
+            <div class="job-meta">Done • Score +6%</div>
+          </div>
+        </div>
+        <div class="task-item">
+          <div class="checkbox"></div>
+          <div style="flex:1;">
+            <div class="job-title">Ship 2 case studies to portfolio</div>
+            <div class="job-meta">Due Friday • +10 readiness</div>
+          </div>
+        </div>
+        <div class="task-item">
+          <div class="checkbox"></div>
+          <div style="flex:1;">
+            <div class="job-title">Practice 3 system-design interviews</div>
+            <div class="job-meta">This week • +15 readiness</div>
+          </div>
+        </div>
+        <div class="task-item">
+          <div class="checkbox"></div>
+          <div style="flex:1;">
+            <div class="job-title">Book coffee chats with 2 hiring managers</div>
+            <div class="job-meta">Next 7 days • +8 readiness</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <h3 style="font-weight:700;font-size:16px;">💡 AI insight of the day</h3>
+        <span class="badge badge-hot">New</span>
+      </div>
+      <p style="color:var(--muted);font-size:14px;">Your resume mentions "led a team" three times but never quantifies the outcome. Add one number (team size, KPI, revenue) to each — expect a +8 point boost to your Career Readiness Score within a day.</p>
+    </div>
+  </main>
+</div>
+
+<script type="module">
+  import { requireUser, signOut, animateCounter } from '/app.js';
+
+  const user = await requireUser();
+  if (user) {
+    const name = user.user_metadata?.full_name || user.email?.split('@')[0] || 'there';
+    document.getElementById('userName').textContent = name;
+  }
+
+  document.getElementById('signOutBtn').addEventListener('click', signOut);
+
+  // Animate readiness ring to 78
+  const target = 78;
+  const circumference = 327; // 2*pi*52
+  const num = document.getElementById('scoreNum');
+  const ring = document.getElementById('ringFill');
+  requestAnimationFrame(() => {
+    ring.style.strokeDashoffset = String(circumference - (circumference * target / 100));
+  });
+  animateCounter(num, target);
+
+  document.querySelectorAll('[data-count]').forEach(el => {
+    animateCounter(el, Number(el.dataset.count));
+  });
+</script>
+</body>
+</html>
