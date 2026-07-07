@@ -9,6 +9,103 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="/styles.css" />
+<style>
+  /* Local styles for tab system and parser UI */
+  .tab-content {
+    display: none;
+  }
+  .tab-content.active {
+    display: block;
+  }
+  .sidebar .side-link {
+    cursor: pointer;
+  }
+  .sidebar .side-link.active {
+    background: var(--card-2);
+    font-weight: 600;
+  }
+  .dropzone {
+    border: 2px dashed var(--border);
+    padding: 40px;
+    border-radius: var(--radius);
+    text-align: center;
+    background: var(--card);
+    cursor: pointer;
+    transition: all .2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0;
+  }
+  .dropzone:hover {
+    border-color: var(--brand);
+    background: var(--card-2);
+  }
+  .dropzone-icon {
+    font-size: 40px;
+  }
+  .file-input {
+    display: none;
+  }
+  .onboarding-card {
+    max-width: 600px;
+    margin: 40px auto;
+    text-align: center;
+    padding: 30px;
+  }
+  .pill-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .pill {
+    background: var(--card-2);
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    border: 1px solid var(--border);
+  }
+  .chat-box {
+    height: 350px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    overflow-y: auto;
+    background: var(--card);
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .chat-msg {
+    max-width: 80%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 14px;
+  }
+  .chat-msg.mentor {
+    background: var(--card-2);
+    align-self: flex-start;
+  }
+  .chat-msg.user {
+    background: var(--brand);
+    color: white;
+    align-self: flex-end;
+  }
+  .chat-input-wrap {
+    display: flex;
+    gap: 8px;
+  }
+  .chat-input {
+    flex: 1;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    background: var(--card);
+  }
+</style>
 </head>
 <body>
 <div class="dash-wrap">
@@ -18,13 +115,13 @@
       <span>CareerPilot</span>
     </a>
     <div class="sidebar-title">Workspace</div>
-    <a href="#" class="side-link active">📊 Dashboard</a>
-    <a href="#" class="side-link">📄 Resume</a>
-    <a href="#" class="side-link">🎯 Job matches</a>
-    <a href="#" class="side-link">🧭 Roadmap</a>
-    <a href="#" class="side-link">🤖 AI Mentor</a>
+    <a class="side-link active" data-tab="dashboard">📊 Dashboard</a>
+    <a class="side-link" data-tab="resume">📄 Resume</a>
+    <a class="side-link" data-tab="jobs">🎯 Job matches</a>
+    <a class="side-link" data-tab="roadmap">🧭 Roadmap</a>
+    <a class="side-link" data-tab="mentor">🤖 AI Mentor</a>
     <div class="sidebar-title" style="margin-top:auto;">Account</div>
-    <a href="#" class="side-link">⚙️ Settings</a>
+    <a class="side-link" data-tab="settings">⚙️ Settings</a>
     <button class="side-link" id="signOutBtn" style="text-align:left;">↪ Sign out</button>
   </aside>
 
@@ -32,149 +129,608 @@
     <div class="dash-head">
       <div>
         <h1>Welcome back, <span id="userName" class="gradient-text">there</span> 👋</h1>
-        <p>Here's what needs your attention today.</p>
+        <p id="subGreeting">Here's what needs your attention today.</p>
       </div>
-      <div style="display:flex;gap:8px;">
+      <div style="display:flex;gap:8px;align-items:center;">
         <button class="btn btn-ghost" data-theme-toggle aria-label="Toggle theme"></button>
-        <button class="btn btn-outline">🔔 Notifications</button>
-        <button class="btn btn-primary">+ Update resume</button>
+        <button class="btn btn-outline" id="notifBtn">🔔 Notifications</button>
+        <button class="btn btn-primary" id="updateResumeBtn">+ Update resume</button>
       </div>
     </div>
 
-    <div class="grid-3">
-      <div class="card">
-        <div class="score-ring">
-          <svg class="ring-svg" viewBox="0 0 120 120">
-            <defs><linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#06b6d4"/>
-            </linearGradient></defs>
-            <circle class="ring-track" cx="60" cy="60" r="52" fill="none" stroke-width="12"/>
-            <circle class="ring-fill" cx="60" cy="60" r="52" fill="none" stroke-width="12"
-              stroke-dasharray="327" stroke-dashoffset="327" id="ringFill"
-              transform="rotate(-90 60 60)"/>
-          </svg>
-          <div class="score-text">
-            <div class="score-num" id="scoreNum">0</div>
-            <div class="score-label">Career Readiness</div>
-            <div class="metric-trend">↑ 12 this week</div>
-          </div>
+    <!-- Onboarding State -->
+    <div id="onboardingState" class="tab-content active">
+      <div class="card onboarding-card">
+        <div style="font-size:48px;margin-bottom:12px;">🚀</div>
+        <h2>Unlock AI Career Intelligence</h2>
+        <p style="color:var(--muted);margin:10px 0 20px;">Upload your resume (.pdf or .docx) to analyze your score, discover tailored job matches, build a learning roadmap, and start chat coaching.</p>
+        
+        <div class="dropzone" id="onboardingDropzone">
+          <div class="dropzone-icon">📄</div>
+          <p style="font-weight:600;">Drag and drop your resume here</p>
+          <p style="font-size:12px;color:var(--muted);">or click to browse (.pdf, .docx)</p>
+          <input type="file" class="file-input" id="onboardingFileInput" accept=".pdf,.docx" />
         </div>
-      </div>
-      <div class="card metric">
-        <div class="metric-label">Resume score</div>
-        <div class="metric-val" data-count="82" data-suffix="%">0%</div>
-        <div class="progress"><div class="progress-bar" style="width:82%;"></div></div>
-        <div class="metric-trend">↑ 6% vs last week</div>
-      </div>
-      <div class="card metric">
-        <div class="metric-label">Skills mapped</div>
-        <div class="metric-val" data-count="24">0</div>
-        <div class="progress"><div class="progress-bar" style="width:60%;"></div></div>
-        <div class="metric-trend">+3 this week</div>
-      </div>
-      <div class="card metric">
-        <div class="metric-label">Job matches</div>
-        <div class="metric-val" data-count="47">0</div>
-        <div class="progress"><div class="progress-bar" style="width:90%;"></div></div>
-        <div class="metric-trend">+8 today</div>
-      </div>
-    </div>
-
-    <div class="grid-2">
-      <div class="card">
-        <h3 style="font-weight:700;font-size:16px;margin-bottom:16px;display:flex;justify-content:space-between;">
-          Top matched roles <a href="#" style="color:var(--brand);font-size:13px;">View all</a>
-        </h3>
-        <div class="job-item">
-          <div>
-            <div class="job-title">Senior Product Designer</div>
-            <div class="job-meta">Stripe • Remote • $140k–$180k</div>
-          </div>
-          <span class="badge badge-hot">96% match</span>
-        </div>
-        <div class="job-item">
-          <div>
-            <div class="job-title">Full-Stack Engineer</div>
-            <div class="job-meta">Linear • Hybrid • $150k–$200k</div>
-          </div>
-          <span class="badge badge-new">92% match</span>
-        </div>
-        <div class="job-item">
-          <div>
-            <div class="job-title">AI Product Manager</div>
-            <div class="job-meta">Notion • Remote • $160k–$210k</div>
-          </div>
-          <span class="badge badge-new">89% match</span>
-        </div>
-      </div>
-
-      <div class="card">
-        <h3 style="font-weight:700;font-size:16px;margin-bottom:16px;">This week's roadmap</h3>
-        <div class="task-item">
-          <div class="checkbox done">✓</div>
-          <div style="flex:1;">
-            <div class="job-title" style="text-decoration:line-through;color:var(--muted);">Complete resume optimization</div>
-            <div class="job-meta">Done • Score +6%</div>
-          </div>
-        </div>
-        <div class="task-item">
-          <div class="checkbox"></div>
-          <div style="flex:1;">
-            <div class="job-title">Ship 2 case studies to portfolio</div>
-            <div class="job-meta">Due Friday • +10 readiness</div>
-          </div>
-        </div>
-        <div class="task-item">
-          <div class="checkbox"></div>
-          <div style="flex:1;">
-            <div class="job-title">Practice 3 system-design interviews</div>
-            <div class="job-meta">This week • +15 readiness</div>
-          </div>
-        </div>
-        <div class="task-item">
-          <div class="checkbox"></div>
-          <div style="flex:1;">
-            <div class="job-title">Book coffee chats with 2 hiring managers</div>
-            <div class="job-meta">Next 7 days • +8 readiness</div>
-          </div>
+        <div id="onboardingLoading" style="display:none;margin-top:16px;">
+          <div class="spinner" style="margin: 0 auto 8px;"></div>
+          <p style="font-size:14px;color:var(--brand);">Parsing and sync with Supabase...</p>
         </div>
       </div>
     </div>
 
-    <div class="card" style="margin-top:20px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-        <h3 style="font-weight:700;font-size:16px;">💡 AI insight of the day</h3>
-        <span class="badge badge-hot">New</span>
+    <!-- Dashboard Tab -->
+    <div id="dashboardTab" class="tab-content">
+      <div class="grid-3">
+        <div class="card">
+          <div class="score-ring">
+            <svg class="ring-svg" viewBox="0 0 120 120">
+              <defs><linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#06b6d4"/>
+              </linearGradient></defs>
+              <circle class="ring-track" cx="60" cy="60" r="52" fill="none" stroke-width="12"/>
+              <circle class="ring-fill" cx="60" cy="60" r="52" fill="none" stroke-width="12"
+                stroke-dasharray="327" stroke-dashoffset="327" id="ringFill"
+                transform="rotate(-90 60 60)"/>
+            </svg>
+            <div class="score-text">
+              <div class="score-num" id="scoreNum">0</div>
+              <div class="score-label">Career Readiness</div>
+              <div class="metric-trend" id="readinessTrend">Dynamic Score</div>
+            </div>
+          </div>
+        </div>
+        <div class="card metric">
+          <div class="metric-label">Resume score</div>
+          <div class="metric-val" id="resumeScoreVal" data-count="0" data-suffix="%">0%</div>
+          <div class="progress"><div class="progress-bar" id="resumeProgressBar" style="width:0%;"></div></div>
+          <div class="metric-trend">Optimized vs benchmark</div>
+        </div>
+        <div class="card metric">
+          <div class="metric-label">Skills mapped</div>
+          <div class="metric-val" id="skillsCountVal" data-count="0">0</div>
+          <div class="progress"><div class="progress-bar" id="skillsProgressBar" style="width:0%;"></div></div>
+          <div class="metric-trend">Extracted from resume</div>
+        </div>
+        <div class="card metric">
+          <div class="metric-label">Job matches</div>
+          <div class="metric-val" id="jobMatchesVal" data-count="0">0</div>
+          <div class="progress"><div class="progress-bar" id="jobsProgressBar" style="width:0%;"></div></div>
+          <div class="metric-trend">Matching your skills</div>
+        </div>
       </div>
-      <p style="color:var(--muted);font-size:14px;">Your resume mentions "led a team" three times but never quantifies the outcome. Add one number (team size, KPI, revenue) to each — expect a +8 point boost to your Career Readiness Score within a day.</p>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="font-weight:700;font-size:16px;margin-bottom:16px;display:flex;justify-content:space-between;">
+            Top matched roles <a class="side-link" data-tab="jobs" style="color:var(--brand);font-size:13px;">View all</a>
+          </h3>
+          <div id="jobsList">
+            <!-- Dynamic jobs go here -->
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 style="font-weight:700;font-size:16px;margin-bottom:16px;display:flex;justify-content:space-between;">
+            This week's roadmap <a class="side-link" data-tab="roadmap" style="color:var(--brand);font-size:13px;">View details</a>
+          </h3>
+          <div id="roadmapList">
+            <!-- Dynamic roadmap items go here -->
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:20px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <h3 style="font-weight:700;font-size:16px;">💡 AI insight of the day</h3>
+          <span class="badge badge-hot">New</span>
+        </div>
+        <p style="color:var(--muted);font-size:14px;" id="aiInsightText">Analyzing your data...</p>
+      </div>
+    </div>
+
+    <!-- Resume Tab -->
+    <div id="resumeTab" class="tab-content">
+      <div class="card" style="margin-bottom:20px;">
+        <h3>Resume Intelligence & Details</h3>
+        <p style="color:var(--muted);margin-bottom:16px;">Manage your uploaded resume data or upload a new one to refresh details.</p>
+        
+        <div class="dropzone" id="resumeDropzone">
+          <div class="dropzone-icon">📄</div>
+          <p style="font-weight:600;">Upload new resume to overwrite</p>
+          <input type="file" class="file-input" id="resumeFileInput" accept=".pdf,.docx" />
+        </div>
+        <div id="resumeLoading" style="display:none;margin-top:16px;text-align:center;">
+          <div class="spinner" style="margin:0 auto 8px;"></div>
+          <p style="font-size:14px;color:var(--brand);">Parsing and saving file...</p>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="margin-bottom:12px;">Contact details</h3>
+          <div style="display:grid;gap:12px;">
+            <div>
+              <label style="font-size:12px;color:var(--muted);">Extracted Name</label>
+              <div style="font-weight:600;font-size:16px;" id="extractedName">-</div>
+            </div>
+            <div>
+              <label style="font-size:12px;color:var(--muted);">Extracted Email</label>
+              <div style="font-weight:600;font-size:16px;" id="extractedEmail">-</div>
+            </div>
+          </div>
+
+          <h3 style="margin-top:24px;margin-bottom:12px;">Skills list</h3>
+          <div class="pill-list" id="extractedSkills">
+            <!-- Dynamic skills -->
+          </div>
+        </div>
+
+        <div class="card" style="display:grid;gap:20px;">
+          <div>
+            <h3 style="margin-bottom:8px;">Experience</h3>
+            <pre style="white-space:pre-wrap;font-family:inherit;font-size:14px;color:var(--muted);" id="extractedExperience">-</pre>
+          </div>
+          <div>
+            <h3 style="margin-bottom:8px;">Education</h3>
+            <pre style="white-space:pre-wrap;font-family:inherit;font-size:14px;color:var(--muted);" id="extractedEducation">-</pre>
+          </div>
+          <div>
+            <h3 style="margin-bottom:8px;">Projects</h3>
+            <pre style="white-space:pre-wrap;font-family:inherit;font-size:14px;color:var(--muted);" id="extractedProjects">-</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Job Matches Tab -->
+    <div id="jobsTab" class="tab-content">
+      <div class="card">
+        <h3>Smart Job Matches</h3>
+        <p style="color:var(--muted);margin-bottom:20px;">These roles are selected automatically based on the skills extracted from your resume.</p>
+        <div style="display:grid;gap:16px;" id="jobsTabList">
+          <!-- Jobs -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Roadmap Tab -->
+    <div id="roadmapTab" class="tab-content">
+      <div class="card">
+        <h3>Personalized Learning Roadmap</h3>
+        <p style="color:var(--muted);margin-bottom:20px;">Complete these steps to address gaps in your profile and level up your Readiness Score.</p>
+        <div style="display:grid;gap:16px;" id="roadmapTabList">
+          <!-- Roadmap items -->
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Mentor Tab -->
+    <div id="mentorTab" class="tab-content">
+      <div class="card">
+        <h3>AI Career Mentor Chat</h3>
+        <p style="color:var(--muted);margin-bottom:16px;">Chat with a career coach trained on Google, Stripe, and Linear hiring playbooks.</p>
+        <div class="chat-box" id="chatBox">
+          <div class="chat-msg mentor">Hello! I've analyzed your background. How can I help you optimize your resume, prepare for mock interviews, or narrow down job targets today?</div>
+        </div>
+        <form class="chat-input-wrap" id="chatForm">
+          <input type="text" class="chat-input" id="chatInput" placeholder="Ask about system design, resume tweaks..." required />
+          <button type="submit" class="btn btn-primary">Send</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Settings Tab -->
+    <div id="settingsTab" class="tab-content">
+      <div class="card" style="max-width: 600px;">
+        <h3>Account Settings</h3>
+        <p style="color:var(--muted);margin-bottom:20px;">Configure your preferences and profile details.</p>
+        
+        <div style="display:grid;gap:16px;">
+          <div>
+            <label style="font-size:12px;color:var(--muted);">Email Address</label>
+            <input type="text" id="settingsEmail" readonly style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-2);opacity:.8;" />
+          </div>
+          <div>
+            <label style="font-size:12px;color:var(--muted);">Full Name</label>
+            <input type="text" id="settingsName" readonly style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-2);opacity:.8;" />
+          </div>
+          <div>
+            <label style="font-size:12px;color:var(--muted);">Appearance Theme</label>
+            <div style="margin-top:6px;">
+              <button class="btn btn-outline" data-theme-toggle>Toggle Light/Dark Mode</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </main>
 </div>
 
 <script type="module">
-  import { requireUser, signOut, animateCounter } from '/app.js';
+  import { requireUser, signOut, animateCounter, supabase, toast } from '/app.js';
+  import { parseResumeFile } from '/parser.js';
 
+  // 1. Force Authentication
   const user = await requireUser();
   if (user) {
     const name = user.user_metadata?.full_name || user.email?.split('@')[0] || 'there';
     document.getElementById('userName').textContent = name;
+    document.getElementById('settingsEmail').value = user.email || '';
+    document.getElementById('settingsName').value = name;
   }
 
   document.getElementById('signOutBtn').addEventListener('click', signOut);
 
-  // Animate readiness ring to 78
-  const target = 78;
-  const circumference = 327; // 2*pi*52
-  const num = document.getElementById('scoreNum');
-  const ring = document.getElementById('ringFill');
-  requestAnimationFrame(() => {
-    ring.style.strokeDashoffset = String(circumference - (circumference * target / 100));
-  });
-  animateCounter(num, target);
+  // 2. Tab System
+  const sidebarLinks = document.querySelectorAll('.side-link');
+  const tabContents = document.querySelectorAll('.tab-content');
 
-  document.querySelectorAll('[data-count]').forEach(el => {
-    animateCounter(el, Number(el.dataset.count));
+  function switchTab(tabId) {
+    sidebarLinks.forEach(l => {
+      if (l.dataset.tab === tabId) l.classList.add('active');
+      else l.classList.remove('active');
+    });
+
+    tabContents.forEach(tc => {
+      tc.classList.remove('active');
+    });
+
+    // Check if showing dashboard, but user has no resume data
+    if (tabId === 'dashboard' && !currentResumeData) {
+      document.getElementById('onboardingState').classList.add('active');
+    } else {
+      const activeTab = document.getElementById(tabId + 'Tab');
+      if (activeTab) activeTab.classList.add('active');
+    }
+  }
+
+  sidebarLinks.forEach(link => {
+    link.addEventListener('click', e => {
+      const tab = link.dataset.tab;
+      if (tab) switchTab(tab);
+    });
   });
+
+  // Also catch logo and other internal dashboard links
+  document.querySelectorAll('a.side-link').forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      const tab = link.getAttribute('data-tab');
+      if (tab) switchTab(tab);
+    });
+  });
+
+  // 3. Dropzones & File Selectors
+  const onbDropzone = document.getElementById('onboardingDropzone');
+  const onbInput = document.getElementById('onboardingFileInput');
+  const resDropzone = document.getElementById('resumeDropzone');
+  const resInput = document.getElementById('resumeFileInput');
+
+  onbDropzone.addEventListener('click', () => onbInput.click());
+  resDropzone.addEventListener('click', () => resInput.click());
+
+  onbInput.addEventListener('change', e => handleResumeUpload(e.target.files[0], 'onboarding'));
+  resInput.addEventListener('change', e => handleResumeUpload(e.target.files[0], 'resume'));
+
+  // Drag and drop setup
+  ['dragenter', 'dragover'].forEach(eventName => {
+    onbDropzone.addEventListener(eventName, e => { e.preventDefault(); onbDropzone.style.borderColor = 'var(--brand)'; }, false);
+    resDropzone.addEventListener(eventName, e => { e.preventDefault(); resDropzone.style.borderColor = 'var(--brand)'; }, false);
+  });
+  ['dragleave', 'drop'].forEach(eventName => {
+    onbDropzone.addEventListener(eventName, e => { e.preventDefault(); onbDropzone.style.borderColor = 'var(--border)'; }, false);
+    resDropzone.addEventListener(eventName, e => { e.preventDefault(); resDropzone.style.borderColor = 'var(--border)'; }, false);
+  });
+  onbDropzone.addEventListener('drop', e => {
+    const dt = e.dataTransfer;
+    if (dt.files.length) handleResumeUpload(dt.files[0], 'onboarding');
+  });
+  resDropzone.addEventListener('drop', e => {
+    const dt = e.dataTransfer;
+    if (dt.files.length) handleResumeUpload(dt.files[0], 'resume');
+  });
+
+  document.getElementById('updateResumeBtn').addEventListener('click', () => {
+    switchTab('resume');
+  });
+
+  document.getElementById('notifBtn').addEventListener('click', () => {
+    toast('No new notifications today.');
+  });
+
+  // 4. Resume Parsing & Save
+  let currentResumeData = null;
+
+  async function handleResumeUpload(file, type) {
+    if (!file) return;
+    const loader = document.getElementById(type === 'onboarding' ? 'onboardingLoading' : 'resumeLoading');
+    loader.style.display = 'block';
+    
+    try {
+      const parsed = await parseResumeFile(file);
+      
+      // Upsert to Supabase
+      const { data, error } = await supabase
+        .from('resumes')
+        .upsert({
+          user_id: user.id,
+          name: parsed.name,
+          email: parsed.email,
+          skills: parsed.skills,
+          experience: parsed.experience,
+          education: parsed.education,
+          projects: parsed.projects,
+          raw_text: parsed.raw_text,
+          resume_score: parsed.resume_score,
+          readiness_score: parsed.readiness_score,
+          updated_at: new Date().toISOString()
+        });
+      
+      if (error) throw error;
+      
+      toast('Resume parsed and synchronized successfully!');
+      await loadResumeData();
+      switchTab('dashboard');
+    } catch (err) {
+      toast(err.message || 'Parsing / DB Sync failed', 'error');
+      console.error(err);
+    } finally {
+      loader.style.display = 'none';
+    }
+  }
+
+  // 5. Load Resume Data & Populate Views
+  async function loadResumeData() {
+    try {
+      const { data, error } = await supabase
+        .from('resumes')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data) {
+        currentResumeData = data;
+        
+        // Hide onboarding, show dashboard content
+        document.getElementById('onboardingState').classList.remove('active');
+        
+        // Compute readiness ring
+        const target = data.readiness_score;
+        const circumference = 327; // 2*pi*52
+        const num = document.getElementById('scoreNum');
+        const ring = document.getElementById('ringFill');
+        ring.style.strokeDashoffset = String(circumference - (circumference * target / 100));
+        animateCounter(num, target);
+        document.getElementById('readinessTrend').textContent = target > 75 ? 'Excellent readiness' : 'Room to grow';
+
+        // Set scores
+        const resVal = document.getElementById('resumeScoreVal');
+        resVal.dataset.count = data.resume_score;
+        animateCounter(resVal, data.resume_score, 1000);
+        document.getElementById('resumeProgressBar').style.width = data.resume_score + '%';
+
+        const skVal = document.getElementById('skillsCountVal');
+        skVal.dataset.count = data.skills?.length || 0;
+        animateCounter(skVal, data.skills?.length || 0, 1000);
+        document.getElementById('skillsProgressBar').style.width = Math.min(100, (data.skills?.length || 0) * 4) + '%';
+
+        // Extracted page populate
+        document.getElementById('extractedName').textContent = data.name || 'Not detected';
+        document.getElementById('extractedEmail').textContent = data.email || 'Not detected';
+        document.getElementById('extractedExperience').textContent = data.experience || 'None';
+        document.getElementById('extractedEducation').textContent = data.education || 'None';
+        document.getElementById('extractedProjects').textContent = data.projects || 'None';
+
+        const skillsContainer = document.getElementById('extractedSkills');
+        skillsContainer.innerHTML = '';
+        if (data.skills && data.skills.length > 0) {
+          data.skills.forEach(s => {
+            const span = document.createElement('span');
+            span.className = 'pill';
+            span.textContent = s;
+            skillsContainer.appendChild(span);
+          });
+        } else {
+          skillsContainer.innerHTML = '<span style="color:var(--muted);font-size:14px;">No skills mapped yet.</span>';
+        }
+
+        // Dynamically build jobs, roadmaps, and insights
+        generateDynamicContent(data.skills, data.name);
+      } else {
+        // No data, show onboarding
+        currentResumeData = null;
+        document.getElementById('onboardingState').classList.add('active');
+        document.getElementById('dashboardTab').classList.remove('active');
+      }
+    } catch (err) {
+      console.error('Error fetching resume:', err);
+    }
+  }
+
+  // 6. Content Generators
+  function generateDynamicContent(skills = [], name = 'there') {
+    const jobs = [
+      { title: 'Frontend Engineer', company: 'Stripe', meta: 'Remote • $135k–$175k', match: 95, skillReq: ['JavaScript', 'React', 'TypeScript', 'TailwindCSS'] },
+      { title: 'Full-Stack Developer', company: 'Linear', meta: 'Hybrid • $145k–$190k', match: 92, skillReq: ['Node.js', 'React', 'PostgreSQL', 'TypeScript'] },
+      { title: 'Software Engineer (Product)', company: 'Notion', meta: 'Remote • $155k–$200k', match: 88, skillReq: ['JavaScript', 'HTML5', 'CSS3', 'Python'] },
+      { title: 'UI/UX Designer', company: 'Figma', meta: 'San Francisco • $140k–$180k', match: 96, skillReq: ['Figma', 'Product Design', 'UI/UX Design'] },
+      { title: 'Product Manager (AI)', company: 'OpenAI', meta: 'Remote • $180k–$240k', match: 89, skillReq: ['AI', 'LLMs', 'Analytics'] },
+      { title: 'Data Scientist', company: 'Supabase', meta: 'Remote • $130k–$170k', match: 91, skillReq: ['Python', 'PostgreSQL', 'Data Science'] }
+    ];
+
+    // Filter jobs matching at least one of user's skills, or show generic fallback matching
+    const matchedJobs = jobs.map(j => {
+      const intersect = j.skillReq.filter(s => skills.includes(s));
+      const bonusMatch = Math.round((intersect.length / j.skillReq.length) * 40) + 60; // 60% base match
+      return { ...j, match: Math.min(100, bonusMatch) };
+    }).sort((a, b) => b.match - a.match);
+
+    // Populate dashboard Job list (3 cards)
+    const jobsList = document.getElementById('jobsList');
+    jobsList.innerHTML = '';
+    matchedJobs.slice(0, 3).forEach(job => {
+      const div = document.createElement('div');
+      div.className = 'job-item';
+      div.innerHTML = `
+        <div>
+          <div class="job-title">${job.title}</div>
+          <div class="job-meta">${job.company} • ${job.meta}</div>
+        </div>
+        <span class="badge ${job.match >= 90 ? 'badge-hot' : 'badge-new'}">${job.match}% match</span>
+      `;
+      jobsList.appendChild(div);
+    });
+
+    // Populate Jobs tab list
+    const jobsTabList = document.getElementById('jobsTabList');
+    jobsTabList.innerHTML = '';
+    matchedJobs.forEach(job => {
+      const div = document.createElement('div');
+      div.className = 'card';
+      div.style.display = 'flex';
+      div.style.justifyContent = 'space-between';
+      div.style.alignItems = 'center';
+      div.innerHTML = `
+        <div>
+          <h4 style="font-weight:700;font-size:16px;">${job.title}</h4>
+          <p style="color:var(--muted);font-size:14px;margin:4px 0;">${job.company} • ${job.meta}</p>
+          <div class="pill-list" style="margin-top:8px;">
+            ${job.skillReq.map(s => `<span class="pill" style="${skills.includes(s) ? 'border-color:var(--success);color:var(--success);' : ''}">${s}</span>`).join('')}
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <span class="badge ${job.match >= 90 ? 'badge-hot' : 'badge-new'}" style="display:inline-block;margin-bottom:8px;">${job.match}% Match</span>
+          <div><button class="btn btn-primary" onclick="alert('Applications simulated!')">Apply now</button></div>
+        </div>
+      `;
+      jobsTabList.appendChild(div);
+    });
+
+    // Job matches counter update
+    const jobMatchesVal = document.getElementById('jobMatchesVal');
+    jobMatchesVal.dataset.count = matchedJobs.length;
+    animateCounter(jobMatchesVal, matchedJobs.length, 1000);
+    document.getElementById('jobsProgressBar').style.width = Math.min(100, matchedJobs.length * 15) + '%';
+
+    // Roadmap Generation
+    const allRoadmapItems = [
+      { task: 'Optimize resume contact and header details', req: 'none', reward: 'Readiness +5', impact: 5 },
+      { task: 'Incorporate quantifiable metrics in experience descriptions', req: 'none', reward: 'Readiness +10', impact: 10 },
+      { task: 'Add TailwindCSS or clean layout frameworks to skills list', missing: 'TailwindCSS', reward: 'Readiness +8', impact: 8 },
+      { task: 'Master TypeScript principles and code standard layouts', missing: 'TypeScript', reward: 'Readiness +12', impact: 12 },
+      { task: 'Learn Postgres relational indexing and query scaling', missing: 'PostgreSQL', reward: 'Readiness +10', impact: 10 },
+      { task: 'Build Figma prototype layouts for UI workflow alignment', missing: 'Figma', reward: 'Readiness +9', impact: 9 },
+      { task: 'Integrate LLM API workflows into custom web applications', missing: 'LLMs', reward: 'Readiness +15', impact: 15 }
+    ];
+
+    const activeRoadmap = allRoadmapItems.filter(item => {
+      if (item.req === 'none') return true;
+      if (item.missing && !skills.includes(item.missing)) return true;
+      return false;
+    });
+
+    // Dashboard Roadmap (4 items)
+    const roadmapList = document.getElementById('roadmapList');
+    roadmapList.innerHTML = '';
+    activeRoadmap.slice(0, 4).forEach((item, idx) => {
+      const isDone = idx === 0; // mark first item as done for interactive contrast
+      const div = document.createElement('div');
+      div.className = 'task-item';
+      div.innerHTML = `
+        <div class="checkbox ${isDone ? 'done' : ''}">${isDone ? '✓' : ''}</div>
+        <div style="flex:1;">
+          <div class="job-title" style="${isDone ? 'text-decoration:line-through;color:var(--muted);' : ''}">${item.task}</div>
+          <div class="job-meta">${isDone ? 'Completed' : item.reward}</div>
+        </div>
+      `;
+      div.querySelector('.checkbox').addEventListener('click', function() {
+        this.classList.toggle('done');
+        this.innerHTML = this.classList.contains('done') ? '✓' : '';
+        const title = this.nextElementSibling.firstElementChild;
+        title.style.textDecoration = this.classList.contains('done') ? 'line-through' : 'none';
+        title.style.color = this.classList.contains('done') ? 'var(--muted)' : 'inherit';
+      });
+      roadmapList.appendChild(div);
+    });
+
+    // Roadmap Tab
+    const roadmapTabList = document.getElementById('roadmapTabList');
+    roadmapTabList.innerHTML = '';
+    activeRoadmap.forEach((item, idx) => {
+      const isDone = idx === 0;
+      const div = document.createElement('div');
+      div.className = 'card';
+      div.style.display = 'flex';
+      div.style.alignItems = 'center';
+      div.style.gap = '16px';
+      div.innerHTML = `
+        <div class="checkbox ${isDone ? 'done' : ''}" style="width:24px;height:24px;border:2px solid var(--border);border-radius:6px;display:grid;place-items:center;cursor:pointer;font-weight:bold;">${isDone ? '✓' : ''}</div>
+        <div style="flex:1;">
+          <h4 style="font-weight:700;font-size:16px;${isDone ? 'text-decoration:line-through;color:var(--muted);' : ''}">${item.task}</h4>
+          <p style="color:var(--muted);font-size:13px;margin-top:2px;">Target closure this week • Reward: ${item.reward}</p>
+        </div>
+      `;
+      div.querySelector('.checkbox').addEventListener('click', function() {
+        this.classList.toggle('done');
+        this.innerHTML = this.classList.contains('done') ? '✓' : '';
+        const title = this.nextElementSibling.firstElementChild;
+        title.style.textDecoration = this.classList.contains('done') ? 'line-through' : 'none';
+        title.style.color = this.classList.contains('done') ? 'var(--muted)' : 'inherit';
+      });
+      roadmapTabList.appendChild(div);
+    });
+
+    // Dynamic AI Insight
+    let insight = "Your resume has been successfully scanned. Try introducing more numerical parameters (like budgets managed, team members led, or performance gains) under experience to raise your readiness score.";
+    if (skills.length < 5) {
+      insight = "We noticed your technical list is a bit sparse. Focus on mapping key frontend and layout engineering skills (like React, Tailwind, TypeScript) to stand out for modern software development roles.";
+    } else if (!skills.includes('TypeScript') && skills.includes('JavaScript')) {
+      insight = "Adding TypeScript to your profile can unlock 42% more job matches! Since you already know JavaScript, consider shipping one mini-project in TS this week for an immediate score boost.";
+    } else if (skills.includes('Figma') && !skills.includes('Product Design')) {
+      insight = "Great work mapping Figma! Employers looking for designers look heavily for 'Product Design' processes. Highlight your workflow and system methodologies for a +10 readiness boost.";
+    }
+    document.getElementById('aiInsightText').textContent = insight;
+  }
+
+  // 7. AI Mentor Chat Simulation
+  const chatForm = document.getElementById('chatForm');
+  const chatBox = document.getElementById('chatBox');
+  const chatInput = document.getElementById('chatInput');
+
+  chatForm.addEventListener('submit', e => {
+    e.preventDefault();
+    const text = chatInput.value.trim();
+    if (!text) return;
+
+    // Append User message
+    appendMessage(text, 'user');
+    chatInput.value = '';
+
+    // Simulate Mentor reply
+    setTimeout(() => {
+      let reply = "That's a solid strategy! Based on your current skills list, I recommend highlighting how you leverage those tools in team projects. Would you like me to do a quick mockup mock interview query?";
+      if (text.toLowerCase().includes('resume') || text.toLowerCase().includes('score')) {
+        reply = `To raise your current score of ${currentResumeData?.readiness_score || 78}, let's add quantified items in your experience list. Instead of saying "developed features", write "led construction of 3 core flows increasing engagement by 15%."`;
+      } else if (text.toLowerCase().includes('interview')) {
+        reply = "Let's do a mock question. 'Can you walk me through a challenging technical problem you solved, and how you measured success?' Go ahead and outline your response!";
+      }
+      appendMessage(reply, 'mentor');
+    }, 800);
+  });
+
+  function appendMessage(text, sender) {
+    const div = document.createElement('div');
+    div.className = `chat-msg ${sender}`;
+    div.textContent = text;
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+
+  // Init Data Fetch
+  await loadResumeData();
+  window.jsLoaded = true;
 </script>
 </body>
 </html>

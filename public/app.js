@@ -2,8 +2,8 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.58.0';
 import { createLovableAuth } from 'https://esm.sh/@lovable.dev/cloud-auth-js@1.1.2';
 
-const SUPABASE_URL = 'https://owhsjcqhnnsjirrpypds.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_a0KhOgRRcqNJSAq4H8ieKw_fIWRausn';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_KEY;
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
