@@ -1,6 +1,5 @@
 // CareerPilot AI — shared JS: Supabase auth, theme, helpers
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.58.0';
-import { createLovableAuth } from 'https://esm.sh/@lovable.dev/cloud-auth-js@1.1.2';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_KEY;
@@ -8,7 +7,6 @@ const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_KEY;
 export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
 });
-const lovableAuth = createLovableAuth();
 
 // -------- Toast --------
 function ensureToastContainer() {
@@ -55,35 +53,67 @@ export function initNav() {
   window.addEventListener('scroll', onScroll, { passive: true });
 }
 
-// -------- Auth actions (Mocked for testing) --------
+// -------- Auth actions (real Supabase auth) --------
 export async function signInWithGoogle() {
-  localStorage.setItem('mock_user', JSON.stringify({ id: 'mock-1', email: 'google@test.com' }));
-  window.location.href = '/dashboard.html';
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.origin + '/dashboard.html' }
+  });
+  if (error) throw error;
 }
 
 export async function signInWithEmail(email, password) {
-  localStorage.setItem('mock_user', JSON.stringify({ id: 'mock-1', email }));
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) throw error;
+  return data.user;
 }
 
 export async function signUpWithEmail(email, password, fullName) {
-  localStorage.setItem('mock_user', JSON.stringify({ id: 'mock-1', email, user_metadata: { full_name: fullName } }));
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      emailRedirectTo: window.location.origin + '/dashboard.html',
+      data: { full_name: fullName }
+    }
+  });
+  if (error) throw error;
+  return data.user;
 }
 
 export async function signOut() {
-  localStorage.removeItem('mock_user');
+  await supabase.auth.signOut();
   window.location.href = '/';
 }
 
 export async function getUser() {
-  const userStr = localStorage.getItem('mock_user');
-  if (userStr) return JSON.parse(userStr);
-  return null;
+  const { data, error } = await supabase.auth.getUser();
+  if (error) return null;
+  return data.user;
 }
 
 export async function requireUser() {
   const user = await getUser();
   if (!user) { window.location.href = '/login.html'; return null; }
   return user;
+}
+
+// -------- Resume data (real Supabase table, replaces localStorage mock) --------
+export async function saveResumeData(userId, resumeDoc) {
+  const { error } = await supabase
+    .from('resumes')
+    .upsert({ user_id: userId, ...resumeDoc, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+  if (error) throw error;
+}
+
+export async function getResumeData(userId) {
+  const { data, error } = await supabase
+    .from('resumes')
+    .select('*')
+    .eq('user_id', userId)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
 }
 
 // -------- Animated counter --------

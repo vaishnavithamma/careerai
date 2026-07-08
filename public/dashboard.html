@@ -105,6 +105,118 @@
     padding: 10px 14px;
     background: var(--card);
   }
+  .skill-gap-item {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    margin-top: 10px;
+  }
+  .skill-gap-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+  }
+  .skill-gap-tags {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+  }
+  .tag-demand-high { background:#dcfce7; color:#166534; padding:2px 8px; border-radius:999px; font-size:11px; }
+  .tag-demand-medium { background:#fef9c3; color:#854d0e; padding:2px 8px; border-radius:999px; font-size:11px; }
+  .tag-demand-growing { background:#dbeafe; color:#1e40af; padding:2px 8px; border-radius:999px; font-size:11px; }
+  .tag-critical { background:#fee2e2; color:#991b1b; padding:2px 8px; border-radius:999px; font-size:11px; }
+  .tag-important { background:#ffedd5; color:#9a3412; padding:2px 8px; border-radius:999px; font-size:11px; }
+  .tag-nice { background:var(--card-2); color:var(--muted); padding:2px 8px; border-radius:999px; font-size:11px; }
+  .skill-gap-why { font-size:13px; color:var(--muted); margin-top:8px; }
+  .skill-gap-meta { font-size:12px; color:var(--muted); margin-top:6px; }
+  .sg-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .sg-bar-label { width: 140px; font-size: 13px; flex-shrink: 0; }
+  .sg-bar-track { flex: 1; height: 14px; background: var(--card-2); border-radius: 999px; overflow: hidden; }
+  .sg-bar-fill { height: 100%; border-radius: 999px; transition: width .6s ease; }
+  .sg-bar-fill.present { background: var(--success); }
+  .sg-bar-fill.missing { background: var(--border); }
+  .sg-bar-pct { width: 40px; text-align: right; font-size: 12px; color: var(--muted); flex-shrink: 0; }
+  .onboarding-choice {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+  .choice-card {
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    width: 220px;
+    cursor: pointer;
+    text-align: center;
+    transition: all .2s;
+  }
+  .choice-card:hover {
+    border-color: var(--brand);
+    background: var(--card-2);
+  }
+  .manual-form-group {
+    margin-bottom: 16px;
+    text-align: left;
+  }
+  .manual-form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .manual-form-group input,
+  .manual-form-group textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--card);
+    font-family: inherit;
+    font-size: 14px;
+  }
+  .manual-form-group textarea {
+    min-height: 80px;
+    resize: vertical;
+  }
+  .skill-tag-input-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px;
+    background: var(--card);
+  }
+  .skill-tag {
+    background: var(--card-2);
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .skill-tag button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1;
+  }
+  .skill-tag-input-wrap input {
+    border: none;
+    flex: 1;
+    min-width: 120px;
+    outline: none;
+    background: transparent;
+    font-size: 14px;
+  }
 </style>
 </head>
 <body>
@@ -120,6 +232,7 @@
     <a class="side-link" data-tab="jobs">🎯 Job matches</a>
     <a class="side-link" data-tab="roadmap">🧭 Roadmap</a>
     <a class="side-link" data-tab="mentor">🤖 AI Mentor</a>
+    <a class="side-link" data-tab="skillgap">🧩 Skill Gap Analysis</a>
     <div class="sidebar-title" style="margin-top:auto;">Account</div>
     <a class="side-link" data-tab="settings">⚙️ Settings</a>
     <button class="side-link" id="signOutBtn" style="text-align:left;">↪ Sign out</button>
@@ -139,12 +252,31 @@
     </div>
 
     <!-- Onboarding State -->
+    <!-- Onboarding State -->
     <div id="onboardingState" class="tab-content active">
-      <div class="card onboarding-card">
+      <div class="card onboarding-card" id="onboardingChoiceCard">
         <div style="font-size:48px;margin-bottom:12px;">🚀</div>
         <h2>Unlock AI Career Intelligence</h2>
-        <p style="color:var(--muted);margin:10px 0 20px;">Upload your resume (.pdf or .docx) to analyze your score, discover tailored job matches, build a learning roadmap, and start chat coaching.</p>
-        
+        <p style="color:var(--muted);margin:10px 0 20px;">Choose how you'd like to build your profile.</p>
+        <div class="onboarding-choice">
+          <div class="choice-card" id="chooseUpload">
+            <div style="font-size:32px;margin-bottom:8px;">📄</div>
+            <div style="font-weight:700;">Upload resume</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:4px;">.pdf or .docx, auto-extracted</div>
+          </div>
+          <div class="choice-card" id="chooseManual">
+            <div style="font-size:32px;margin-bottom:8px;">✍️</div>
+            <div style="font-weight:700;">Enter manually</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:4px;">Fill in your own details</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card onboarding-card" id="onboardingUploadCard" style="display:none;">
+        <button class="btn btn-ghost" id="backFromUpload" style="margin-bottom:12px;">← Back</button>
+        <div style="font-size:48px;margin-bottom:12px;">📄</div>
+        <h2>Upload your resume</h2>
+        <p style="color:var(--muted);margin:10px 0 20px;">We'll extract your skills, experience, and education automatically.</p>
         <div class="dropzone" id="onboardingDropzone">
           <div class="dropzone-icon">📄</div>
           <p style="font-weight:600;">Drag and drop your resume here</p>
@@ -154,6 +286,45 @@
         <div id="onboardingLoading" style="display:none;margin-top:16px;">
           <div class="spinner" style="margin: 0 auto 8px;"></div>
           <p style="font-size:14px;color:var(--brand);">Parsing and sync with Supabase...</p>
+        </div>
+      </div>
+
+      <div class="card" id="manualFormCard" style="display:none;max-width:600px;margin:40px auto;">
+        <button class="btn btn-ghost" id="backFromManual" style="margin-bottom:12px;">← Back</button>
+        <h2 style="margin-bottom:6px;">Enter your details</h2>
+        <p style="color:var(--muted);margin-bottom:20px;font-size:14px;">This builds the same profile as a resume upload — fill in what applies.</p>
+        <form id="manualForm">
+          <div class="manual-form-group">
+            <label>Full name</label>
+            <input type="text" id="manualName" required />
+          </div>
+          <div class="manual-form-group">
+            <label>Email</label>
+            <input type="email" id="manualEmail" required />
+          </div>
+          <div class="manual-form-group">
+            <label>Skills</label>
+            <div class="skill-tag-input-wrap" id="skillTagWrap">
+              <input type="text" id="skillTagInput" placeholder="Type a skill and press Enter" />
+            </div>
+          </div>
+          <div class="manual-form-group">
+            <label>Experience (roles, companies, durations, what you did)</label>
+            <textarea id="manualExperience" placeholder="e.g. Frontend Intern at XYZ Corp (Jun–Aug 2025) — built React dashboards..."></textarea>
+          </div>
+          <div class="manual-form-group">
+            <label>Education</label>
+            <textarea id="manualEducation" placeholder="e.g. B.Tech CSE, XYZ Institute, 2023–2027, CGPA 9.2"></textarea>
+          </div>
+          <div class="manual-form-group">
+            <label>Projects</label>
+            <textarea id="manualProjects" placeholder="e.g. Built a resume parser using pdf.js and mammoth.js..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%;">Save profile</button>
+        </form>
+        <div id="manualLoading" style="display:none;margin-top:16px;text-align:center;">
+          <div class="spinner" style="margin:0 auto 8px;"></div>
+          <p style="font-size:14px;color:var(--brand);">Saving to your account...</p>
         </div>
       </div>
     </div>
@@ -303,7 +474,18 @@
         </div>
       </div>
     </div>
+    <!-- Skill Gap Analysis Tab -->
+    <div id="skillgapTab" class="tab-content">
+      <div class="card">
+        <h3>Skill Gap Analysis</h3>
+        <p style="color:var(--muted);margin-bottom:16px;">Pick a job role to see exactly which skills you're missing, why they matter, and what to do about it.</p>
+        <select id="skillGapJobSelect" style="width:100%;max-width:400px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--card);font-size:14px;margin-bottom:20px;"></select>
+        <div id="skillGapChartWrap" style="margin-bottom:24px;"></div>
+        <div id="skillGapDetail"></div>
+      </div>
+    </div>
 
+    <!-- AI Mentor Tab -->
     <!-- AI Mentor Tab -->
     <div id="mentorTab" class="tab-content">
       <div class="card">
@@ -347,9 +529,9 @@
 </div>
 
 <script type="module">
-  import { requireUser, signOut, animateCounter, supabase, toast } from '/app.js';
+  import { requireUser, signOut, animateCounter, supabase, toast, saveResumeData, getResumeData } from '/app.js';
   import { parseResumeFile } from '/parser.js';
-
+  import { JOBS } from '/jobs-data.js';
   // 1. Force Authentication
   const user = await requireUser();
   if (user) {
@@ -437,7 +619,104 @@
   document.getElementById('notifBtn').addEventListener('click', () => {
     toast('No new notifications today.');
   });
+  // 3b. Onboarding choice + manual entry form
+  const choiceCard = document.getElementById('onboardingChoiceCard');
+  const uploadCard = document.getElementById('onboardingUploadCard');
+  const manualCard = document.getElementById('manualFormCard');
 
+  function showChoice() {
+    choiceCard.style.display = 'block';
+    uploadCard.style.display = 'none';
+    manualCard.style.display = 'none';
+  }
+  document.getElementById('chooseUpload').addEventListener('click', () => {
+    choiceCard.style.display = 'none';
+    uploadCard.style.display = 'block';
+  });
+  document.getElementById('chooseManual').addEventListener('click', () => {
+    choiceCard.style.display = 'none';
+    manualCard.style.display = 'block';
+  });
+  document.getElementById('backFromUpload').addEventListener('click', showChoice);
+  document.getElementById('backFromManual').addEventListener('click', showChoice);
+
+  // Skill tag input (multi-add)
+  let manualSkills = [];
+  const skillTagWrap = document.getElementById('skillTagWrap');
+  const skillTagInput = document.getElementById('skillTagInput');
+
+  function renderSkillTags() {
+    skillTagWrap.querySelectorAll('.skill-tag').forEach(t => t.remove());
+    manualSkills.forEach((skill, idx) => {
+      const tag = document.createElement('span');
+      tag.className = 'skill-tag';
+      tag.innerHTML = `${skill} <button type="button" data-idx="${idx}">×</button>`;
+      tag.querySelector('button').addEventListener('click', () => {
+        manualSkills.splice(idx, 1);
+        renderSkillTags();
+      });
+      skillTagWrap.insertBefore(tag, skillTagInput);
+    });
+  }
+  skillTagInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      const val = skillTagInput.value.trim();
+      if (val && !manualSkills.includes(val)) {
+        manualSkills.push(val);
+        renderSkillTags();
+      }
+      skillTagInput.value = '';
+    }
+  });
+
+  // Shared scoring logic (same criteria as parser.js, so both paths are consistent)
+  function computeScores({ email, name, skills, experience, education, projects }) {
+    let resumeScore = 50;
+    if (email) resumeScore += 10;
+    if (name) resumeScore += 5;
+    if (skills.length > 3) resumeScore += 10;
+    if (experience && experience.trim()) resumeScore += 10;
+    if (education && education.trim()) resumeScore += 10;
+    if (projects && projects.trim()) resumeScore += 5;
+    resumeScore = Math.min(100, resumeScore + Math.min(10, skills.length));
+    const readinessScore = Math.min(100, Math.round(resumeScore * 0.8 + (skills.length * 1.5)));
+    return { resumeScore, readinessScore };
+  }
+
+  document.getElementById('manualForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const loader = document.getElementById('manualLoading');
+    loader.style.display = 'block';
+    try {
+      const name = document.getElementById('manualName').value.trim();
+      const email = document.getElementById('manualEmail').value.trim();
+      const experience = document.getElementById('manualExperience').value.trim();
+      const education = document.getElementById('manualEducation').value.trim();
+      const projects = document.getElementById('manualProjects').value.trim();
+      const { resumeScore, readinessScore } = computeScores({ email, name, skills: manualSkills, experience, education, projects });
+
+      const resumeDoc = {
+        name, email,
+        skills: manualSkills,
+        experience: experience || 'No experience section provided.',
+        education: education || 'No education section provided.',
+        projects: projects || 'No projects section provided.',
+        raw_text: `${name}\n${email}\nSkills: ${manualSkills.join(', ')}\nExperience: ${experience}\nEducation: ${education}\nProjects: ${projects}`,
+        resume_score: resumeScore,
+        readiness_score: readinessScore
+      };
+      await saveResumeData(user.id, resumeDoc);
+      toast('Profile saved!');
+      await loadResumeData();
+      switchTab('dashboard');
+    } catch (err) {
+      toast(err.message || 'Could not save profile', 'error');
+      console.error(err);
+    } finally {
+      loader.style.display = 'none';
+    }
+  });
   // 4. Resume Parsing & Save
   let currentResumeData = null;
 
@@ -448,10 +727,8 @@
     
     try {
       const parsed = await parseResumeFile(file);
-      
-      // Save to LocalStorage (Mock DB)
+
       const resumeDoc = {
-        user_id: user.id,
         name: parsed.name,
         email: parsed.email,
         skills: parsed.skills,
@@ -460,12 +737,11 @@
         projects: parsed.projects,
         raw_text: parsed.raw_text,
         resume_score: parsed.resume_score,
-        readiness_score: parsed.readiness_score,
-        updated_at: new Date().toISOString()
+        readiness_score: parsed.readiness_score
       };
-      localStorage.setItem(`mock_resume_${user.id}`, JSON.stringify(resumeDoc));
-      
-      toast('Resume parsed and saved locally successfully!');
+      await saveResumeData(user.id, resumeDoc);
+
+      toast('Resume parsed and saved to your account!');
       await loadResumeData();
       switchTab('dashboard');
     } catch (err) {
@@ -479,16 +755,14 @@
   // 5. Load Resume Data & Populate Views
   async function loadResumeData() {
     try {
-      // Fetch from LocalStorage (Mock DB)
-      const stored = localStorage.getItem(`mock_resume_${user.id}`);
-      let data = stored ? JSON.parse(stored) : null;
+      const data = await getResumeData(user.id);
 
       if (data) {
         currentResumeData = data;
         
         // Hide onboarding, show dashboard content
         document.getElementById('onboardingState').classList.remove('active');
-        
+        document.getElementById('dashboardTab').classList.add('active');
         // Compute readiness ring
         const target = data.readiness_score;
         const circumference = 327; // 2*pi*52
@@ -541,23 +815,41 @@
       console.error('Error fetching resume:', err);
     }
   }
-
+  // Skill metadata: explains WHY each skill matters, not just whether you have it.
+  // difficulty/timeWeeks are rough estimates a career coach would give, used to
+  // set expectations, not a precise measurement.
+  const SKILL_META = {
+    'JavaScript':      { why: 'Core language for nearly all web development roles.', demand: 'high', difficulty: 'Moderate', timeWeeks: 4, courses: ['JavaScript.info', 'The Odin Project'], projects: ['Build a to-do app with vanilla JS'] },
+    'TypeScript':       { why: 'Adds type safety, used by most modern engineering teams to reduce bugs at scale.', demand: 'high', difficulty: 'Moderate', timeWeeks: 3, courses: ['TypeScript Handbook (official docs)', 'Total TypeScript (free tier)'], projects: ['Convert an existing JS project to TypeScript'] },
+    'React':            { why: 'Most widely used frontend framework; expected baseline for frontend/full-stack roles.', demand: 'high', difficulty: 'Moderate', timeWeeks: 5, courses: ['React official docs tutorial', 'Scrimba React course'], projects: ['Build a multi-page app with routing and API calls'] },
+    'Node.js':          { why: 'Standard for JS-based backend services; needed for full-stack roles.', demand: 'high', difficulty: 'Moderate', timeWeeks: 4, courses: ['Node.js official guides', 'NodeSchool.io'], projects: ['Build a REST API with auth'] },
+    'PostgreSQL':       { why: 'Most common production relational database; used for real data modeling.', demand: 'medium', difficulty: 'Moderate', timeWeeks: 3, courses: ['PostgreSQL Exercises', 'Supabase docs'], projects: ['Design a normalized schema for a real app'] },
+    'TailwindCSS':      { why: 'Fast-growing utility CSS framework, commonly required for frontend speed.', demand: 'growing', difficulty: 'Easy', timeWeeks: 1, courses: ['Tailwind official docs'], projects: ['Rebuild an existing UI using Tailwind only'] },
+    'HTML5':            { why: 'Foundational markup skill, assumed baseline for any web role.', demand: 'high', difficulty: 'Easy', timeWeeks: 1, courses: ['MDN HTML docs'], projects: ['Build a semantic, accessible landing page'] },
+    'CSS3':             { why: 'Foundational styling skill, assumed baseline for any web role.', demand: 'high', difficulty: 'Easy', timeWeeks: 2, courses: ['MDN CSS docs', 'CSS Tricks'], projects: ['Recreate a real website\'s layout from scratch'] },
+    'Python':           { why: 'Dominant language for data, AI/ML, and backend scripting roles.', demand: 'high', difficulty: 'Easy', timeWeeks: 3, courses: ['Python official tutorial', 'CS50P'], projects: ['Build a data-processing script or small API'] },
+    'Figma':            { why: 'Industry-standard design tool; expected for any design-adjacent role.', demand: 'high', difficulty: 'Easy', timeWeeks: 2, courses: ['Figma official tutorials'], projects: ['Design a full app flow from wireframe to hi-fi'] },
+    'Product Design':   { why: 'Employers look for design process/thinking, not just tool proficiency.', demand: 'medium', difficulty: 'Moderate', timeWeeks: 4, courses: ['Google UX Design Certificate'], projects: ['Run a full design process on a real problem, with user research'] },
+    'UI/UX Design':     { why: 'Core competency for design roles; shows you can reason about usability.', demand: 'high', difficulty: 'Moderate', timeWeeks: 4, courses: ['Google UX Design Certificate'], projects: ['Conduct a usability test on an existing app'] },
+    'Artificial Intelligence': { why: 'Signals ability to work on AI-driven product features.', demand: 'high', difficulty: 'Hard', timeWeeks: 8, courses: ['fast.ai', 'Andrew Ng ML course'], projects: ['Build a small ML-powered feature end-to-end'] },
+    'LLMs':              { why: 'Directly relevant to modern AI product roles building on top of language models.', demand: 'high', difficulty: 'Moderate', timeWeeks: 3, courses: ['Anthropic/OpenAI prompt engineering guides'], projects: ['Build a small app using an LLM API'] },
+    'Analytics':         { why: 'Needed to make and justify data-driven product decisions.', demand: 'medium', difficulty: 'Easy', timeWeeks: 2, courses: ['Google Data Analytics Certificate'], projects: ['Analyze a real dataset and present findings'] },
+    'Data Science':      { why: 'Core skill for data-focused roles; combines stats, code, and communication.', demand: 'high', difficulty: 'Hard', timeWeeks: 8, courses: ['Kaggle Learn', 'CS109'], projects: ['Complete an end-to-end Kaggle competition'] }
+  };
+  function metaFor(skill) {
+    return SKILL_META[skill] || { why: 'Commonly requested in job listings for this role.', demand: 'medium', difficulty: 'Moderate', timeWeeks: 3, courses: [], projects: [] };
+  }
   // 6. Content Generators
   function generateDynamicContent(skills = [], name = 'there') {
-    const jobs = [
-      { title: 'Frontend Engineer', company: 'Stripe', meta: 'Remote • $135k–$175k', match: 95, skillReq: ['JavaScript', 'React', 'TypeScript', 'TailwindCSS'] },
-      { title: 'Full-Stack Developer', company: 'Linear', meta: 'Hybrid • $145k–$190k', match: 92, skillReq: ['Node.js', 'React', 'PostgreSQL', 'TypeScript'] },
-      { title: 'Software Engineer (Product)', company: 'Notion', meta: 'Remote • $155k–$200k', match: 88, skillReq: ['JavaScript', 'HTML5', 'CSS3', 'Python'] },
-      { title: 'UI/UX Designer', company: 'Figma', meta: 'San Francisco • $140k–$180k', match: 96, skillReq: ['Figma', 'Product Design', 'UI/UX Design'] },
-      { title: 'Product Manager (AI)', company: 'OpenAI', meta: 'Remote • $180k–$240k', match: 89, skillReq: ['AI', 'LLMs', 'Analytics'] },
-      { title: 'Data Scientist', company: 'Supabase', meta: 'Remote • $130k–$170k', match: 91, skillReq: ['Python', 'PostgreSQL', 'Data Science'] }
-    ];
-
-    // Filter jobs matching at least one of user's skills, or show generic fallback matching
-    const matchedJobs = jobs.map(j => {
-      const intersect = j.skillReq.filter(s => skills.includes(s));
-      const bonusMatch = Math.round((intersect.length / j.skillReq.length) * 40) + 60; // 60% base match
-      return { ...j, match: Math.min(100, bonusMatch) };
+  // Each job's required skills carry an explicit importance weight that sums to 100.
+    // Match % = sum of weights for skills the user already has. This replaces the old
+    // arbitrary "60% floor" approach with a number that's fully traceable to real weights.
+    const normalizedSkills = skills.map(s => s.toLowerCase().trim());
+    const matchedJobs = JOBS.map(j => {
+      const present = j.skillReq.filter(r => normalizedSkills.includes(r.skill.toLowerCase()))
+      const missing = j.skillReq.filter(r => !normalizedSkills.includes(r.skill.toLowerCase()));
+      const match = present.reduce((sum, r) => sum + r.weight, 0);
+      return { ...j, match, present, missing };
     }).sort((a, b) => b.match - a.match);
 
     // Populate dashboard Job list (3 cards)
@@ -577,30 +869,59 @@
     });
 
     // Populate Jobs tab list
+    // Populate Jobs tab list, with a full explainable skill-gap breakdown per job
     const jobsTabList = document.getElementById('jobsTabList');
     jobsTabList.innerHTML = '';
     matchedJobs.forEach(job => {
       const div = document.createElement('div');
       div.className = 'card';
-      div.style.display = 'flex';
-      div.style.justifyContent = 'space-between';
-      div.style.alignItems = 'center';
+      const missingHtml = job.missing.length === 0
+        ? `<p class="skill-gap-meta" style="margin-top:10px;">You already have every skill this role weighs on. 🎉</p>`
+        : job.missing.map(r => {
+            const meta = metaFor(r.skill);
+            const impTag = r.importance === 'critical' ? 'tag-critical' : r.importance === 'important' ? 'tag-important' : 'tag-nice';
+            const demandTag = `tag-demand-${meta.demand}`;
+            return `
+              <div class="skill-gap-item">
+                <div class="skill-gap-head">
+                  <span>${r.skill}</span>
+                  <span>+${r.weight}% if learned</span>
+                </div>
+                <div class="skill-gap-tags">
+                  <span class="${impTag}">${r.importance}</span>
+                  <span class="${demandTag}">${meta.demand} demand</span>
+                  <span class="tag-nice">${meta.difficulty} • ~${meta.timeWeeks}wk</span>
+                </div>
+                <div class="skill-gap-why">${meta.why}</div>
+                ${meta.courses.length ? `<div class="skill-gap-meta">Courses: ${meta.courses.join(', ')}</div>` : ''}
+                ${meta.projects.length ? `<div class="skill-gap-meta">Project idea: ${meta.projects[0]}</div>` : ''}
+              </div>
+            `;
+          }).join('');
+
+      const potentialMatch = Math.min(100, job.match + job.missing.reduce((s, r) => s + r.weight, 0));
+
       div.innerHTML = `
-        <div>
-          <h4 style="font-weight:700;font-size:16px;">${job.title}</h4>
-          <p style="color:var(--muted);font-size:14px;margin:4px 0;">${job.company} • ${job.meta}</p>
-          <div class="pill-list" style="margin-top:8px;">
-            ${job.skillReq.map(s => `<span class="pill" style="${skills.includes(s) ? 'border-color:var(--success);color:var(--success);' : ''}">${s}</span>`).join('')}
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+          <div>
+            <h4 style="font-weight:700;font-size:16px;">${job.title}</h4>
+            <p style="color:var(--muted);font-size:14px;margin:4px 0;">${job.company} • ${job.meta}</p>
+            <div class="pill-list" style="margin-top:8px;">
+              ${job.present.map(r => `<span class="pill" style="border-color:var(--success);color:var(--success);">${r.skill}</span>`).join('')}
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <span class="badge ${job.match >= 70 ? 'badge-hot' : 'badge-new'}" style="display:inline-block;margin-bottom:8px;">${job.match}% Match</span>
+            <div><button class="btn btn-primary" onclick="alert('Applications simulated!')">Apply now</button></div>
           </div>
         </div>
-        <div style="text-align:right;">
-          <span class="badge ${job.match >= 90 ? 'badge-hot' : 'badge-new'}" style="display:inline-block;margin-bottom:8px;">${job.match}% Match</span>
-          <div><button class="btn btn-primary" onclick="alert('Applications simulated!')">Apply now</button></div>
+        <div style="margin-top:14px;">
+          <h5 style="font-weight:600;font-size:14px;margin-bottom:4px;">Skill gap — closing this gets you to ${potentialMatch}% match</h5>
+          ${missingHtml}
         </div>
       `;
       jobsTabList.appendChild(div);
     });
-
     // Job matches counter update
     const jobMatchesVal = document.getElementById('jobMatchesVal');
     jobMatchesVal.dataset.count = matchedJobs.length;
@@ -686,7 +1007,75 @@
     }
     document.getElementById('aiInsightText').textContent = insight;
   }
+  // 8. Skill Gap Analysis tab
+  const skillGapJobSelect = document.getElementById('skillGapJobSelect');
+  JOBS.forEach((job, idx) => {
+    const opt = document.createElement('option');
+    opt.value = idx;
+    opt.textContent = `${job.title} — ${job.company}`;
+    skillGapJobSelect.appendChild(opt);
+  });
 
+  function renderSkillGap() {
+    const skills = currentResumeData?.skills || [];
+    const job = JOBS[skillGapJobSelect.value];
+    if (!job) return;
+
+    const present = job.skillReq.filter(r => skills.includes(r.skill));
+    const missing = job.skillReq.filter(r => !skills.includes(r.skill));
+    const matchPct = present.reduce((s, r) => s + r.weight, 0);
+
+    // Visual: a bar per required skill, green if present, grey if missing
+    const chartWrap = document.getElementById('skillGapChartWrap');
+    chartWrap.innerHTML = `
+      <h4 style="font-weight:600;font-size:14px;margin-bottom:10px;">Your skill coverage for ${job.title}</h4>
+      ${job.skillReq.map(r => {
+        const has = skills.includes(r.skill);
+        return `
+          <div class="sg-bar-row">
+            <div class="sg-bar-label">${r.skill}</div>
+            <div class="sg-bar-track"><div class="sg-bar-fill ${has ? 'present' : 'missing'}" style="width:${has ? 100 : 0}%;"></div></div>
+            <div class="sg-bar-pct">${has ? '✅' : '—'}</div>
+          </div>
+        `;
+      }).join('')}
+      <div style="margin-top:12px;font-weight:700;">Overall match: ${matchPct}%</div>
+    `;
+
+    // Detail: why each missing skill matters, and what to do about it
+    const detail = document.getElementById('skillGapDetail');
+    if (missing.length === 0) {
+      detail.innerHTML = `<p style="color:var(--muted);">You already have every skill required for this role. 🎉</p>`;
+      return;
+    }
+    detail.innerHTML = `
+      <h4 style="font-weight:600;font-size:14px;margin:16px 0 8px;">What you're missing, and how to close the gap</h4>
+      ${missing.map(r => {
+        const meta = metaFor(r.skill);
+        const impTag = r.importance === 'critical' ? 'tag-critical' : r.importance === 'important' ? 'tag-important' : 'tag-nice';
+        const demandTag = `tag-demand-${meta.demand}`;
+        return `
+          <div class="skill-gap-item">
+            <div class="skill-gap-head">
+              <span>${r.skill}</span>
+              <span>+${r.weight}% if learned</span>
+            </div>
+            <div class="skill-gap-tags">
+              <span class="${impTag}">${r.importance}</span>
+              <span class="${demandTag}">${meta.demand} demand</span>
+              <span class="tag-nice">${meta.difficulty} • ~${meta.timeWeeks}wk</span>
+            </div>
+            <div class="skill-gap-why">${meta.why}</div>
+            ${meta.courses.length ? `<div class="skill-gap-meta">Courses: ${meta.courses.join(', ')}</div>` : ''}
+            ${meta.projects.length ? `<div class="skill-gap-meta">Project idea: ${meta.projects[0]}</div>` : ''}
+          </div>
+        `;
+      }).join('')}
+    `;
+  }
+
+  skillGapJobSelect.addEventListener('change', renderSkillGap);
+  renderSkillGap();
   // 7. AI Mentor Chat Simulation
   const chatForm = document.getElementById('chatForm');
   const chatBox = document.getElementById('chatBox');
