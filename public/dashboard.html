@@ -138,6 +138,22 @@
   .sg-bar-fill.present { background: var(--success); }
   .sg-bar-fill.missing { background: var(--border); }
   .sg-bar-pct { width: 40px; text-align: right; font-size: 12px; color: var(--muted); flex-shrink: 0; }
+  .ci-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+  .ci-box { border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .ci-box h4 { font-size: 14px; font-weight: 700; margin-bottom: 10px; }
+  .ci-box ul { padding-left: 18px; font-size: 13px; color: var(--muted); }
+  .ci-box li { margin-bottom: 6px; }
+  .ci-strength { border-left: 3px solid var(--success); }
+  .ci-weakness { border-left: 3px solid #ef4444; }
+  .ci-opportunity { border-left: 3px solid var(--brand); }
+  .ci-trajectory { border-left: 3px solid #f59e0b; }
+  .mi-fb-box { border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-top: 10px; }
+  .mi-fb-good { border-left: 3px solid var(--success); }
+  .mi-fb-warn { border-left: 3px solid #f59e0b; }
+  .mi-fb-item { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+  .pd-eligible { border-left: 3px solid var(--success); }
+  .pd-not-eligible { border-left: 3px solid #ef4444; opacity: 0.85; }
+  .pd-reason { font-size: 12px; color: var(--muted); margin-top: 6px; }
   .onboarding-choice {
     display: flex;
     gap: 16px;
@@ -233,6 +249,9 @@
     <a class="side-link" data-tab="roadmap">🧭 Roadmap</a>
     <a class="side-link" data-tab="mentor">🤖 AI Mentor</a>
     <a class="side-link" data-tab="skillgap">🧩 Skill Gap Analysis</a>
+    <a class="side-link" data-tab="careerintel">🧠 Career Intelligence</a>
+    <a class="side-link" data-tab="mockinterview">🎤 Mock Interview</a>
+    <a class="side-link" data-tab="placement">🏢 Placement Drives</a>
     <div class="sidebar-title" style="margin-top:auto;">Account</div>
     <a class="side-link" data-tab="settings">⚙️ Settings</a>
     <button class="side-link" id="signOutBtn" style="text-align:left;">↪ Sign out</button>
@@ -474,6 +493,51 @@
         </div>
       </div>
     </div>
+    <!-- Placement Drives Tab -->
+    <div id="placementTab" class="tab-content">
+      <div class="card">
+        <h3>Placement Drives</h3>
+        <p style="color:var(--muted);margin-bottom:20px;">Upcoming campus drives, with your real eligibility checked against each company's minimum requirements.</p>
+        <div id="placementList" style="display:grid;gap:16px;"></div>
+      </div>
+    </div>
+
+    <!-- Mock Interview Tab -->
+    <!-- Mock Interview Tab -->
+    <div id="mockinterviewTab" class="tab-content">
+      <div class="card">
+        <h3>Mock Interview</h3>
+        <p style="color:var(--muted);margin-bottom:16px;">Questions are chosen based on your best-matched role and skill gaps — not random.</p>
+        <div id="miIntro"></div>
+        <div id="miQuestionWrap" style="display:none;">
+          <div style="font-weight:600;font-size:15px;margin-bottom:10px;" id="miQuestionText"></div>
+          <textarea id="miAnswerInput" placeholder="Type your answer here..." style="width:100%;min-height:120px;padding:12px;border:1px solid var(--border);border-radius:8px;background:var(--card);font-family:inherit;font-size:14px;"></textarea>
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <button class="btn btn-primary" id="miSubmitBtn">Submit answer</button>
+            <button class="btn btn-outline" id="miSkipBtn">Skip question</button>
+          </div>
+          <div id="miFeedback" style="margin-top:16px;"></div>
+        </div>
+        <div id="miDone" style="display:none;text-align:center;padding:20px;">
+          <div style="font-size:40px;margin-bottom:8px;">🎉</div>
+          <h4>Session complete</h4>
+          <p style="color:var(--muted);font-size:14px;margin:8px 0 16px;" id="miSummary"></p>
+          <button class="btn btn-primary" id="miRestartBtn">Start new session</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Career Intelligence Tab -->
+    <!-- Career Intelligence Tab -->
+    <div id="careerintelTab" class="tab-content">
+      <div class="card">
+        <h3>Career Intelligence</h3>
+        <p style="color:var(--muted);margin-bottom:20px;">A snapshot of where you stand, computed from your actual profile and job matches — not guesses.</p>
+        <div id="careerIntelBody"></div>
+      </div>
+    </div>
+
+    <!-- Skill Gap Analysis Tab -->
     <!-- Skill Gap Analysis Tab -->
     <div id="skillgapTab" class="tab-content">
       <div class="card">
@@ -532,6 +596,8 @@
   import { requireUser, signOut, animateCounter, supabase, toast, saveResumeData, getResumeData } from '/app.js';
   import { parseResumeFile } from '/parser.js';
   import { JOBS } from '/jobs-data.js';
+  import { PLACEMENT_DRIVES } from '/placement-data.js';
+  
   // 1. Force Authentication
   const user = await requireUser();
   if (user) {
@@ -805,6 +871,9 @@
 
         // Dynamically build jobs, roadmaps, and insights
         generateDynamicContent(data.skills, data.name);
+        renderCareerIntelligence();
+        startMockInterview();
+        renderPlacementDrives();
       } else {
         // No data, show onboarding
         currentResumeData = null;
@@ -825,8 +894,8 @@
     'Node.js':          { why: 'Standard for JS-based backend services; needed for full-stack roles.', demand: 'high', difficulty: 'Moderate', timeWeeks: 4, courses: ['Node.js official guides', 'NodeSchool.io'], projects: ['Build a REST API with auth'] },
     'PostgreSQL':       { why: 'Most common production relational database; used for real data modeling.', demand: 'medium', difficulty: 'Moderate', timeWeeks: 3, courses: ['PostgreSQL Exercises', 'Supabase docs'], projects: ['Design a normalized schema for a real app'] },
     'TailwindCSS':      { why: 'Fast-growing utility CSS framework, commonly required for frontend speed.', demand: 'growing', difficulty: 'Easy', timeWeeks: 1, courses: ['Tailwind official docs'], projects: ['Rebuild an existing UI using Tailwind only'] },
-    'HTML5':            { why: 'Foundational markup skill, assumed baseline for any web role.', demand: 'high', difficulty: 'Easy', timeWeeks: 1, courses: ['MDN HTML docs'], projects: ['Build a semantic, accessible landing page'] },
-    'CSS3':             { why: 'Foundational styling skill, assumed baseline for any web role.', demand: 'high', difficulty: 'Easy', timeWeeks: 2, courses: ['MDN CSS docs', 'CSS Tricks'], projects: ['Recreate a real website\'s layout from scratch'] },
+    'HTML':            { why: 'Foundational markup skill, assumed baseline for any web role.', demand: 'high', difficulty: 'Easy', timeWeeks: 1, courses: ['MDN HTML docs'], projects: ['Build a semantic, accessible landing page'] },
+    'CSS':             { why: 'Foundational styling skill, assumed baseline for any web role.', demand: 'high', difficulty: 'Easy', timeWeeks: 2, courses: ['MDN CSS docs', 'CSS Tricks'], projects: ['Recreate a real website\'s layout from scratch'] },
     'Python':           { why: 'Dominant language for data, AI/ML, and backend scripting roles.', demand: 'high', difficulty: 'Easy', timeWeeks: 3, courses: ['Python official tutorial', 'CS50P'], projects: ['Build a data-processing script or small API'] },
     'Figma':            { why: 'Industry-standard design tool; expected for any design-adjacent role.', demand: 'high', difficulty: 'Easy', timeWeeks: 2, courses: ['Figma official tutorials'], projects: ['Design a full app flow from wireframe to hi-fi'] },
     'Product Design':   { why: 'Employers look for design process/thinking, not just tool proficiency.', demand: 'medium', difficulty: 'Moderate', timeWeeks: 4, courses: ['Google UX Design Certificate'], projects: ['Run a full design process on a real problem, with user research'] },
@@ -1007,6 +1076,257 @@
     }
     document.getElementById('aiInsightText').textContent = insight;
   }
+  // 8a. Placement Drives — real eligibility check against your resume score and best matching job
+  function renderPlacementDrives() {
+    const list = document.getElementById('placementList');
+    if (!list) return;
+
+    const data = currentResumeData;
+    if (!data) {
+      list.innerHTML = `<p style="color:var(--muted);">Complete your profile to see which drives you're eligible for.</p>`;
+      return;
+    }
+
+    const skills = (data.skills || []).map(s => s.toLowerCase().trim());
+    const allMatches = JOBS.map(j => {
+      const present = j.skillReq.filter(r => skills.includes(r.skill.toLowerCase()));
+      const match = present.reduce((s, r) => s + r.weight, 0);
+      return { title: j.title, match };
+    });
+
+    list.innerHTML = PLACEMENT_DRIVES.map(drive => {
+      const relatedMatch = allMatches.find(m => m.title === drive.relatedJobTitle);
+      const matchPct = relatedMatch ? relatedMatch.match : 0;
+      const scoreOk = data.resume_score >= drive.minResumeScore;
+      const matchOk = matchPct >= drive.minMatch;
+      const eligible = scoreOk && matchOk;
+
+      const reasons = [];
+      if (!scoreOk) reasons.push(`Resume score ${data.resume_score}% is below the ${drive.minResumeScore}% minimum.`);
+      if (!matchOk) reasons.push(`Your match for a similar role (${drive.relatedJobTitle}) is ${matchPct}%, below the ${drive.minMatch}% minimum.`);
+
+      return `
+        <div class="card ${eligible ? 'pd-eligible' : 'pd-not-eligible'}">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+            <div>
+              <h4 style="font-weight:700;font-size:16px;">${drive.company} — ${drive.role}</h4>
+              <p style="color:var(--muted);font-size:13px;margin:4px 0;">${new Date(drive.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} • ${drive.location}</p>
+            </div>
+            <span class="badge ${eligible ? 'badge-hot' : 'badge-new'}">${eligible ? 'Eligible' : 'Not yet eligible'}</span>
+          </div>
+          ${eligible
+            ? `<button class="btn btn-primary" style="margin-top:10px;" onclick="alert('Application simulated!')">Apply now</button>`
+            : `<div class="pd-reason">${reasons.join(' ')}</div>`}
+        </div>
+      `;
+    }).join('');
+  }
+  // 8b. Mock Interview — questions picked from your real match data, real (rule-based) feedback
+  const QUESTION_BANK = {
+    general: [
+      "Tell me about a project you're proud of and the impact it had.",
+      "Describe a time you had to debug a difficult problem. What was your process?",
+      "How do you prioritize tasks when working on multiple things at once?",
+      "Tell me about a time you disagreed with a teammate. How did you handle it?"
+    ],
+    skillSpecific: {
+      'React': "Walk me through how you'd structure state management in a mid-sized React app.",
+      'Python': "How would you approach optimizing a slow Python script?",
+      'SQL': "Explain the difference between an INNER JOIN and a LEFT JOIN, with an example.",
+      'Machine Learning': "How would you detect and handle overfitting in a model you're training?",
+      'Docker': "Explain what a Dockerfile does and why containerization is useful.",
+      'AWS': "How would you design a simple, cost-conscious deployment on AWS for a small app?",
+      'Node.js': "How do you handle errors in an asynchronous Node.js API?",
+      'Data Science': "Walk me through how you'd approach a dataset with a lot of missing values."
+    }
+  };
+
+  let miQueue = [];
+  let miIndex = 0;
+  let miResults = [];
+
+  function buildMockInterviewSession() {
+    const skills = currentResumeData?.skills || [];
+    const normalizedSkills = skills.map(s => s.toLowerCase().trim());
+    const allMatches = JOBS.map(j => {
+      const present = j.skillReq.filter(r => normalizedSkills.includes(r.skill.toLowerCase()));
+      const missing = j.skillReq.filter(r => !normalizedSkills.includes(r.skill.toLowerCase()));
+      const match = present.reduce((s, r) => s + r.weight, 0);
+      return { ...j, match, present, missing };
+    }).sort((a, b) => b.match - a.match);
+
+    const topJob = allMatches[0];
+    const questions = [];
+
+    // Pull skill-specific questions for skills relevant to the top matched job (present or missing)
+    if (topJob) {
+      topJob.skillReq.forEach(r => {
+        if (QUESTION_BANK.skillSpecific[r.skill]) {
+          questions.push({ text: QUESTION_BANK.skillSpecific[r.skill], skill: r.skill });
+        }
+      });
+    }
+    // Fill with general questions
+    QUESTION_BANK.general.forEach(q => questions.push({ text: q, skill: null }));
+
+    return { topJob, questions: questions.slice(0, 5) };
+  }
+
+  function startMockInterview() {
+    const session = buildMockInterviewSession();
+    miQueue = session.questions;
+    miIndex = 0;
+    miResults = [];
+
+    const intro = document.getElementById('miIntro');
+    if (miQueue.length === 0) {
+      intro.innerHTML = `<p style="color:var(--muted);">Complete your profile first so we can pick relevant questions for you.</p>`;
+      return;
+    }
+    intro.innerHTML = session.topJob
+      ? `<p style="color:var(--muted);margin-bottom:16px;">Based on your top match (<strong>${session.topJob.title}</strong> at ${session.topJob.company}), here are ${miQueue.length} questions.</p>`
+      : '';
+
+    document.getElementById('miQuestionWrap').style.display = 'block';
+    document.getElementById('miDone').style.display = 'none';
+    showMiQuestion();
+  }
+
+  function showMiQuestion() {
+    const q = miQueue[miIndex];
+    document.getElementById('miQuestionText').textContent = `Q${miIndex + 1} of ${miQueue.length}: ${q.text}`;
+    document.getElementById('miAnswerInput').value = '';
+    document.getElementById('miFeedback').innerHTML = '';
+  }
+
+  // Rule-based feedback: real checks, not a fake AI grade.
+  function evaluateAnswer(text) {
+    const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
+    const hasNumbers = /\d/.test(text);
+    const hasExampleWords = /(for example|e\.g\.|specifically|instance|project|built|led|used)/i.test(text);
+
+    const checks = [
+      { label: 'Answer length', pass: wordCount >= 40, note: wordCount >= 40 ? `Good depth (${wordCount} words).` : `Fairly short (${wordCount} words) — aim for 40+ to fully explain your reasoning.` },
+      { label: 'Concrete example', pass: hasExampleWords, note: hasExampleWords ? 'You referenced a specific example — good.' : 'Consider naming a specific project or situation, not just general statements.' },
+      { label: 'Quantified impact', pass: hasNumbers, note: hasNumbers ? 'You included a number/metric — strong signal for interviewers.' : 'Try adding a number (%, time saved, users, etc.) to show measurable impact.' }
+    ];
+    return checks;
+  }
+
+  document.getElementById('miSubmitBtn')?.addEventListener('click', () => {
+    const text = document.getElementById('miAnswerInput').value.trim();
+    if (!text) { toast('Write an answer first', 'error'); return; }
+    const checks = evaluateAnswer(text);
+    miResults.push({ question: miQueue[miIndex].text, checks });
+
+    document.getElementById('miFeedback').innerHTML = checks.map(c => `
+      <div class="mi-fb-box ${c.pass ? 'mi-fb-good' : 'mi-fb-warn'}">
+        <div class="mi-fb-item"><strong>${c.pass ? '✅' : '⚠️'} ${c.label}:</strong> ${c.note}</div>
+      </div>
+    `).join('') + `<button class="btn btn-primary" id="miNextBtn" style="margin-top:12px;">Next question</button>`;
+
+    document.getElementById('miNextBtn').addEventListener('click', advanceMockInterview);
+  });
+
+  document.getElementById('miSkipBtn')?.addEventListener('click', advanceMockInterview);
+
+  function advanceMockInterview() {
+    miIndex++;
+    if (miIndex >= miQueue.length) {
+      finishMockInterview();
+    } else {
+      showMiQuestion();
+    }
+  }
+
+  function finishMockInterview() {
+    document.getElementById('miQuestionWrap').style.display = 'none';
+    document.getElementById('miDone').style.display = 'block';
+    const answered = miResults.length;
+    const strong = miResults.filter(r => r.checks.every(c => c.pass)).length;
+    document.getElementById('miSummary').textContent =
+      `You answered ${answered} of ${miQueue.length} questions. ${strong} answer${strong === 1 ? '' : 's'} hit all three quality checks (length, example, metric).`;
+  }
+
+  document.getElementById('miRestartBtn')?.addEventListener('click', startMockInterview);
+  // 9. Career Intelligence — computed from real match data, not static text
+  function renderCareerIntelligence() {
+    const skills = currentResumeData?.skills || [];
+    const normalizedSkills = skills.map(s => s.toLowerCase().trim());
+    const body = document.getElementById('careerIntelBody');
+    if (!body) return;
+
+    if (skills.length === 0) {
+      body.innerHTML = `<p style="color:var(--muted);">Complete your profile to see your Career Intelligence report.</p>`;
+      return;
+    }
+
+    // Match every job, same logic as the dashboard
+    const allMatches = JOBS.map(j => {
+      const present = j.skillReq.filter(r => normalizedSkills.includes(r.skill.toLowerCase()));
+      const missing = j.skillReq.filter(r => !normalizedSkills.includes(r.skill.toLowerCase()));
+      const match = present.reduce((s, r) => s + r.weight, 0);
+      return { ...j, match, present, missing };
+    }).sort((a, b) => b.match - a.match);
+
+    const topJob = allMatches[0];
+
+    // Weaknesses: tally how often each missing skill appears as "critical" across your top 5 matches
+    const criticalGapCount = {};
+    allMatches.slice(0, 5).forEach(job => {
+      job.missing.forEach(r => {
+        if (r.importance === 'critical') {
+          criticalGapCount[r.skill] = (criticalGapCount[r.skill] || 0) + 1;
+        }
+      });
+    });
+    const topWeaknesses = Object.entries(criticalGapCount)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([skill, count]) => `${skill} — missing in ${count} of your top 5 matched roles`);
+
+    // Opportunity: single highest-weight missing skill across your top 3 matches
+    const oppCandidates = [];
+    allMatches.slice(0, 3).forEach(job => {
+      job.missing.forEach(r => oppCandidates.push({ ...r, job: job.title }));
+    });
+    oppCandidates.sort((a, b) => b.weight - a.weight);
+    const topOpportunity = oppCandidates[0];
+
+    body.innerHTML = `
+      <div class="ci-box ci-trajectory">
+        <h4>📈 Career Trajectory</h4>
+        <p style="font-size:13px;color:var(--muted);">
+          Your strongest current match is <strong>${topJob.title}</strong> at ${topJob.company} (${topJob.match}% match).
+          ${topJob.match >= 80
+            ? `You're close to being fully aligned with this role — closing your remaining gaps could make you a strong candidate.`
+            : `There's meaningful room to grow toward this role — see Opportunity below for the highest-leverage next step.`}
+        </p>
+      </div>
+      <div class="ci-grid">
+        <div class="ci-box ci-strength">
+          <h4>✅ Strengths</h4>
+          <ul>
+            ${skills.slice(0, 8).map(s => `<li>${s}</li>`).join('') || '<li>No skills mapped yet</li>'}
+          </ul>
+        </div>
+        <div class="ci-box ci-weakness">
+          <h4>⚠️ Weaknesses</h4>
+          <ul>
+            ${topWeaknesses.length ? topWeaknesses.map(w => `<li>${w}</li>`).join('') : '<li>No major recurring gaps detected — solid coverage.</li>'}
+          </ul>
+        </div>
+      </div>
+      <div class="ci-box ci-opportunity" style="margin-top:16px;">
+        <h4>🎯 Biggest Opportunity</h4>
+        <p style="font-size:13px;color:var(--muted);">
+          ${topOpportunity
+            ? `Learning <strong>${topOpportunity.skill}</strong> would add +${topOpportunity.weight}% to your match for ${topOpportunity.job} — the single highest-impact skill you could add right now.`
+            : `You're already well-matched across your top roles.`}
+        </p>
+      </div>
+    `;
+  }
   // 8. Skill Gap Analysis tab
   const skillGapJobSelect = document.getElementById('skillGapJobSelect');
   JOBS.forEach((job, idx) => {
@@ -1018,11 +1338,12 @@
 
   function renderSkillGap() {
     const skills = currentResumeData?.skills || [];
+    const normalizedSkills = skills.map(s => s.toLowerCase().trim());
     const job = JOBS[skillGapJobSelect.value];
     if (!job) return;
 
-    const present = job.skillReq.filter(r => skills.includes(r.skill));
-    const missing = job.skillReq.filter(r => !skills.includes(r.skill));
+    const present = job.skillReq.filter(r => normalizedSkills.includes(r.skill.toLowerCase()));
+    const missing = job.skillReq.filter(r => !normalizedSkills.includes(r.skill.toLowerCase()));
     const matchPct = present.reduce((s, r) => s + r.weight, 0);
 
     // Visual: a bar per required skill, green if present, grey if missing
@@ -1030,7 +1351,7 @@
     chartWrap.innerHTML = `
       <h4 style="font-weight:600;font-size:14px;margin-bottom:10px;">Your skill coverage for ${job.title}</h4>
       ${job.skillReq.map(r => {
-        const has = skills.includes(r.skill);
+        const has = normalizedSkills.includes(r.skill.toLowerCase());
         return `
           <div class="sg-bar-row">
             <div class="sg-bar-label">${r.skill}</div>

@@ -52,15 +52,18 @@ export function parseResumeText(text) {
   
   // 3. Extract Skills (check for intersection with a standard list of skills)
   const knownSkills = [
-    'javascript', 'typescript', 'python', 'java', 'c++', 'c#', 'php', 'ruby', 'go', 'rust', 'swift', 'kotlin',
-    'react', 'angular', 'vue', 'next.js', 'svelte', 'solid', 'node', 'express', 'django', 'flask', 'fastapi',
-    'spring', 'laravel', 'rails', 'html', 'css', 'sass', 'tailwind', 'bootstrap', 'material ui',
-    'postgresql', 'mysql', 'mongodb', 'redis', 'sqlite', 'oracle', 'supabase', 'firebase', 'aws', 'gcp', 'azure',
-    'docker', 'kubernetes', 'git', 'github', 'gitlab', 'ci/cd', 'agile', 'scrum', 'jira',
-    'figma', 'sketch', 'adobe xd', 'photoshop', 'illustrator', 'ui/ux', 'product design', 'graphic design',
-    'ai', 'machine learning', 'deep learning', 'nlp', 'llm', 'computer vision', 'data science', 'analytics'
+    'javascript', 'typescript', 'python', 'java', 'c++', 'c#', 'php', 'ruby', 'go', 'rust', 'swift', 'kotlin', 'dart', 'solidity',
+    'react', 'angular', 'vue', 'next.js', 'svelte', 'solid', 'node', 'express', 'django', 'flask', 'fastapi', 'flutter',
+    'spring', 'laravel', 'rails', 'html', 'css', 'sass', 'tailwind', 'bootstrap', 'material ui', 'responsive design',
+    'postgresql', 'mysql', 'mongodb', 'redis', 'sqlite', 'oracle', 'supabase', 'firebase', 'aws', 'gcp', 'azure', 'sql', 'pl/sql',
+    'docker', 'kubernetes', 'git', 'github', 'gitlab', 'ci/cd', 'agile', 'scrum', 'jira', 'jenkins', 'linux',
+    'figma', 'sketch', 'adobe xd', 'photoshop', 'illustrator', 'ui/ux', 'product design', 'graphic design', 'wireframing', 'prototyping',
+    'ai', 'machine learning', 'deep learning', 'nlp', 'llm', 'computer vision', 'data science', 'analytics',
+    'tensorflow', 'pytorch', 'pandas', 'numpy', 'transformers', 'data visualization', 'statistics', 'excel', 'power bi',
+    'networking', 'cybersecurity', 'siem', 'risk assessment', 'cisco', 'firewall', 'routing', 'security',
+    'rest api', 'web3', 'ethereum', 'unity', 'game physics', 'oop', 'system design', 'data structures', 'algorithms',
+    'selenium', 'junit', 'automation', 'embedded systems', 'rtos', 'debugging', 'database design', 'performance tuning', 'monitoring', 'mathematics', 'research'
   ];
-  
   const foundSkillsSet = new Set();
   const lowerText = text.toLowerCase();
   knownSkills.forEach(skill => {
@@ -76,19 +79,29 @@ export function parseResumeText(text) {
     if (regex.test(lowerText)) {
       const displayMap = {
         'javascript': 'JavaScript', 'typescript': 'TypeScript', 'python': 'Python', 'java': 'Java', 'c++': 'C++', 'c#': 'C#',
-        'php': 'PHP', 'ruby': 'Ruby', 'go': 'Go', 'rust': 'Rust', 'swift': 'Swift', 'kotlin': 'Kotlin',
+        'php': 'PHP', 'ruby': 'Ruby', 'go': 'Go', 'rust': 'Rust', 'swift': 'Swift', 'kotlin': 'Kotlin', 'dart': 'Dart', 'solidity': 'Solidity',
         'react': 'React', 'angular': 'Angular', 'vue': 'Vue.js', 'next.js': 'Next.js', 'svelte': 'Svelte', 'solid': 'Solid.js',
-        'node': 'Node.js', 'express': 'Express.js', 'django': 'Django', 'flask': 'Flask', 'fastapi': 'FastAPI',
-        'spring': 'Spring Boot', 'laravel': 'Laravel', 'rails': 'Ruby on Rails', 'html': 'HTML5', 'css': 'CSS3',
-        'sass': 'Sass', 'tailwind': 'TailwindCSS', 'bootstrap': 'Bootstrap', 'material ui': 'Material-UI',
+        'node': 'Node.js', 'express': 'Express.js', 'django': 'Django', 'flask': 'Flask', 'fastapi': 'FastAPI', 'flutter': 'Flutter',
+        'spring': 'Spring Boot', 'laravel': 'Laravel', 'rails': 'Ruby on Rails', 'html5': 'HTML5', 'CSS': 'CSS3',
+        'sass': 'Sass', 'tailwind': 'TailwindCSS', 'bootstrap': 'Bootstrap', 'material ui': 'Material-UI', 'responsive design': 'Responsive Design',
         'postgresql': 'PostgreSQL', 'mysql': 'MySQL', 'mongodb': 'MongoDB', 'redis': 'Redis', 'sqlite': 'SQLite',
-        'supabase': 'Supabase', 'firebase': 'Firebase', 'aws': 'AWS', 'gcp': 'GCP', 'azure': 'Azure',
+        'supabase': 'Supabase', 'firebase': 'Firebase', 'aws': 'AWS', 'gcp': 'GCP', 'azure': 'Azure', 'sql': 'SQL', 'pl/sql': 'PL/SQL',
         'docker': 'Docker', 'kubernetes': 'Kubernetes', 'git': 'Git', 'github': 'GitHub', 'gitlab': 'GitLab',
-        'ci/cd': 'CI/CD', 'agile': 'Agile', 'scrum': 'Scrum', 'jira': 'Jira', 'figma': 'Figma', 'sketch': 'Sketch',
-        'adobe xd': 'Adobe XD', 'photoshop': 'Adobe Photoshop', 'illustrator': 'Adobe Illustrator',
+        'ci/cd': 'CI/CD', 'agile': 'Agile', 'scrum': 'Scrum', 'jira': 'Jira', 'jenkins': 'Jenkins', 'linux': 'Linux',
+        'figma': 'Figma', 'sketch': 'Sketch', 'adobe xd': 'Adobe XD', 'photoshop': 'Adobe Photoshop', 'illustrator': 'Adobe Illustrator',
         'ui/ux': 'UI/UX Design', 'product design': 'Product Design', 'graphic design': 'Graphic Design',
+        'wireframing': 'Wireframing', 'prototyping': 'Prototyping',
         'ai': 'Artificial Intelligence', 'machine learning': 'Machine Learning', 'deep learning': 'Deep Learning',
-        'nlp': 'NLP', 'llm': 'LLMs', 'computer vision': 'Computer Vision', 'data science': 'Data Science', 'analytics': 'Analytics'
+        'nlp': 'NLP', 'llm': 'LLMs', 'computer vision': 'Computer Vision', 'data science': 'Data Science', 'analytics': 'Analytics',
+        'tensorflow': 'TensorFlow', 'pytorch': 'PyTorch', 'pandas': 'Pandas', 'numpy': 'NumPy', 'transformers': 'Transformers',
+        'data visualization': 'Data Visualization', 'statistics': 'Statistics', 'excel': 'Excel', 'power bi': 'Power BI',
+        'networking': 'Networking', 'cybersecurity': 'Cybersecurity', 'siem': 'SIEM', 'risk assessment': 'Risk Assessment',
+        'cisco': 'Cisco', 'firewall': 'Firewall', 'routing': 'Routing', 'security': 'Security',
+        'rest api': 'REST API', 'web3': 'Web3', 'ethereum': 'Ethereum', 'unity': 'Unity', 'game physics': 'Game Physics',
+        'oop': 'OOP', 'system design': 'System Design', 'data structures': 'Data Structures', 'algorithms': 'Algorithms',
+        'selenium': 'Selenium', 'junit': 'JUnit', 'automation': 'Automation', 'embedded systems': 'Embedded Systems',
+        'rtos': 'RTOS', 'debugging': 'Debugging', 'database design': 'Database Design', 'performance tuning': 'Performance Tuning',
+        'monitoring': 'Monitoring', 'mathematics': 'Mathematics', 'research': 'Research'
       };
       foundSkillsSet.add(displayMap[skill] || skill);
     }
