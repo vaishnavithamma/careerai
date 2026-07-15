@@ -1,5 +1,5 @@
 // Client-side Resume PDF/DOCX Parser for CareerPilot AI
-import { JOBS } from "/jobs-data.js";
+import { normalizeSkill } from './skills.js';
 async function loadScript(src) {
   return new Promise((resolve, reject) => {
     if (document.querySelector(`script[src="${src}"]`)) return resolve();
@@ -58,7 +58,7 @@ export function parseResumeText(text) {
     'postgresql', 'mysql', 'mongodb', 'redis', 'sqlite', 'oracle', 'supabase', 'firebase', 'aws', 'gcp', 'azure', 'sql', 'pl/sql',
     'docker', 'kubernetes', 'git', 'github', 'gitlab', 'ci/cd', 'agile', 'scrum', 'jira', 'jenkins', 'linux',
     'figma', 'sketch', 'adobe xd', 'photoshop', 'illustrator', 'ui/ux', 'product design', 'graphic design', 'wireframing', 'prototyping',
-    'ai', 'machine learning', 'deep learning', 'nlp', 'llm', 'computer vision', 'data science', 'analytics',
+    'ai', 'ml', 'machine learning', 'deep learning', 'nlp', 'llm', 'computer vision', 'data science', 'analytics',
     'tensorflow', 'pytorch', 'pandas', 'numpy', 'transformers', 'data visualization', 'statistics', 'excel', 'power bi',
     'networking', 'cybersecurity', 'siem', 'risk assessment', 'cisco', 'firewall', 'routing', 'security',
     'rest api', 'web3', 'ethereum', 'unity', 'game physics', 'oop', 'system design', 'data structures', 'algorithms',
@@ -91,7 +91,7 @@ export function parseResumeText(text) {
         'figma': 'Figma', 'sketch': 'Sketch', 'adobe xd': 'Adobe XD', 'photoshop': 'Adobe Photoshop', 'illustrator': 'Adobe Illustrator',
         'ui/ux': 'UI/UX Design', 'product design': 'Product Design', 'graphic design': 'Graphic Design',
         'wireframing': 'Wireframing', 'prototyping': 'Prototyping',
-        'ai': 'Artificial Intelligence', 'machine learning': 'Machine Learning', 'deep learning': 'Deep Learning',
+        'ai': 'Artificial Intelligence', 'ml': 'Machine Learning', 'machine learning': 'Machine Learning', 'deep learning': 'Deep Learning',
         'nlp': 'NLP', 'llm': 'LLMs', 'computer vision': 'Computer Vision', 'data science': 'Data Science', 'analytics': 'Analytics',
         'tensorflow': 'TensorFlow', 'pytorch': 'PyTorch', 'pandas': 'Pandas', 'numpy': 'NumPy', 'transformers': 'Transformers',
         'data visualization': 'Data Visualization', 'statistics': 'Statistics', 'excel': 'Excel', 'power bi': 'Power BI',
@@ -103,7 +103,7 @@ export function parseResumeText(text) {
         'rtos': 'RTOS', 'debugging': 'Debugging', 'database design': 'Database Design', 'performance tuning': 'Performance Tuning',
         'monitoring': 'Monitoring', 'mathematics': 'Mathematics', 'research': 'Research'
       };
-      foundSkillsSet.add(displayMap[skill] || skill);
+      foundSkillsSet.add(normalizeSkill(displayMap[skill] || skill));
     }
   });
   const skills = Array.from(foundSkillsSet);
@@ -186,14 +186,18 @@ export function parseResumeText(text) {
 }
 
 export async function parseResumeFile(file) {
+  const fileName = file.name.toLowerCase();
   const arrayBuffer = await file.arrayBuffer();
   let text = '';
-  if (file.name.endsWith('.pdf')) {
+  if (fileName.endsWith('.pdf')) {
     text = await extractTextFromPdf(arrayBuffer);
-  } else if (file.name.endsWith('.docx')) {
+  } else if (fileName.endsWith('.docx')) {
     text = await extractTextFromDocx(arrayBuffer);
   } else {
     throw new Error('Unsupported file format. Please upload a .pdf or .docx file.');
+  }
+  if (!text.trim()) {
+    throw new Error('No readable text was found. Please upload a text-based PDF or DOCX file.');
   }
   return parseResumeText(text);
 }

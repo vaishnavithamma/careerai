@@ -476,7 +476,7 @@
     <div id="jobsTab" class="tab-content">
       <div class="card">
         <h3>Smart Job Matches</h3>
-        <p style="color:var(--muted);margin-bottom:20px;">These roles are selected automatically based on the skills extracted from your resume.</p>
+        <p style="color:var(--muted);margin-bottom:20px;">Demo role profiles ranked from the skills extracted from your resume. They are not live job listings.</p>
         <div style="display:grid;gap:16px;" id="jobsTabList">
           <!-- Jobs -->
         </div>
@@ -497,7 +497,7 @@
     <div id="placementTab" class="tab-content">
       <div class="card">
         <h3>Placement Drives</h3>
-        <p style="color:var(--muted);margin-bottom:20px;">Upcoming campus drives, with your real eligibility checked against each company's minimum requirements.</p>
+        <p style="color:var(--muted);margin-bottom:20px;">Demo campus-drive profiles, with eligibility calculated from the configured requirements and your current profile.</p>
         <div id="placementList" style="display:grid;gap:16px;"></div>
       </div>
     </div>
@@ -553,8 +553,8 @@
     <!-- AI Mentor Tab -->
     <div id="mentorTab" class="tab-content">
       <div class="card">
-        <h3>AI Career Mentor Chat</h3>
-        <p style="color:var(--muted);margin-bottom:16px;">Chat with a career coach trained on Google, Stripe, and Linear hiring playbooks.</p>
+        <h3>Career Mentor Prototype</h3>
+        <p style="color:var(--muted);margin-bottom:16px;">A rule-based coaching prototype that uses limited current-profile context; it is not a generative AI mentor.</p>
         <div class="chat-box" id="chatBox">
           <div class="chat-msg mentor">Hello! I've analyzed your background. How can I help you optimize your resume, prepare for mock interviews, or narrow down job targets today?</div>
         </div>
@@ -597,15 +597,17 @@
   import { parseResumeFile } from '/parser.js';
   import { JOBS } from '/jobs-data.js';
   import { PLACEMENT_DRIVES } from '/placement-data.js';
+  import { normalizeSkillList, skillsMatch } from '/skills.js';
   
   // 1. Force Authentication
   const user = await requireUser();
-  if (user) {
+  if (!user) {
+    // requireUser has started navigation to login. Do not initialize dashboard state.
+  } else {
     const name = user.user_metadata?.full_name || user.email?.split('@')[0] || 'there';
     document.getElementById('userName').textContent = name;
     document.getElementById('settingsEmail').value = user.email || '';
     document.getElementById('settingsName').value = name;
-  }
 
   document.getElementById('signOutBtn').addEventListener('click', signOut);
 
@@ -716,11 +718,16 @@
     manualSkills.forEach((skill, idx) => {
       const tag = document.createElement('span');
       tag.className = 'skill-tag';
-      tag.innerHTML = `${skill} <button type="button" data-idx="${idx}">×</button>`;
-      tag.querySelector('button').addEventListener('click', () => {
+      tag.append(document.createTextNode(`${skill} `));
+      const removeButton = document.createElement('button');
+      removeButton.type = 'button';
+      removeButton.dataset.idx = String(idx);
+      removeButton.textContent = '×';
+      removeButton.addEventListener('click', () => {
         manualSkills.splice(idx, 1);
         renderSkillTags();
       });
+      tag.append(removeButton);
       skillTagWrap.insertBefore(tag, skillTagInput);
     });
   }
@@ -728,8 +735,9 @@
     if (e.key === 'Enter' || e.key === ',') {
       e.preventDefault();
       const val = skillTagInput.value.trim();
-      if (val && !manualSkills.includes(val)) {
-        manualSkills.push(val);
+      const normalizedSkill = normalizeSkillList([val])[0];
+      if (normalizedSkill && !manualSkills.some(skill => skillsMatch(skill, normalizedSkill))) {
+        manualSkills.push(normalizedSkill);
         renderSkillTags();
       }
       skillTagInput.value = '';
@@ -764,7 +772,7 @@
 
       const resumeDoc = {
         name, email,
-        skills: manualSkills,
+        skills: normalizeSkillList(manualSkills),
         experience: experience || 'No experience section provided.',
         education: education || 'No education section provided.',
         projects: projects || 'No projects section provided.',
@@ -788,6 +796,16 @@
 
   async function handleResumeUpload(file, type) {
     if (!file) return;
+    const allowedExtensions = ['.pdf', '.docx'];
+    const lowerName = file.name.toLowerCase();
+    if (!allowedExtensions.some(extension => lowerName.endsWith(extension))) {
+      toast('Please upload a PDF or DOCX file.', 'error');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast('Please upload a file smaller than 5 MB.', 'error');
+      return;
+    }
     const loader = document.getElementById(type === 'onboarding' ? 'onboardingLoading' : 'resumeLoading');
     loader.style.display = 'block';
     
@@ -874,6 +892,7 @@
         renderCareerIntelligence();
         startMockInterview();
         renderPlacementDrives();
+        renderSkillGap();
       } else {
         // No data, show onboarding
         currentResumeData = null;
@@ -887,6 +906,12 @@
   // Skill metadata: explains WHY each skill matters, not just whether you have it.
   // difficulty/timeWeeks are rough estimates a career coach would give, used to
   // set expectations, not a precise measurement.
+  function escapeHtml(value) {
+    const element = document.createElement('div');
+    element.textContent = String(value);
+    return element.innerHTML;
+  }
+
   const SKILL_META = {
     'JavaScript':      { why: 'Core language for nearly all web development roles.', demand: 'high', difficulty: 'Moderate', timeWeeks: 4, courses: ['JavaScript.info', 'The Odin Project'], projects: ['Build a to-do app with vanilla JS'] },
     'TypeScript':       { why: 'Adds type safety, used by most modern engineering teams to reduce bugs at scale.', demand: 'high', difficulty: 'Moderate', timeWeeks: 3, courses: ['TypeScript Handbook (official docs)', 'Total TypeScript (free tier)'], projects: ['Convert an existing JS project to TypeScript'] },
@@ -908,15 +933,20 @@
   function metaFor(skill) {
     return SKILL_META[skill] || { why: 'Commonly requested in job listings for this role.', demand: 'medium', difficulty: 'Moderate', timeWeeks: 3, courses: [], projects: [] };
   }
+  function jobSearchUrl(title, company) {
+    const keywords = encodeURIComponent(`${title} ${company}`);
+    return `https://www.linkedin.com/jobs/search/?keywords=${keywords}`;
+  }
+
   // 6. Content Generators
   function generateDynamicContent(skills = [], name = 'there') {
   // Each job's required skills carry an explicit importance weight that sums to 100.
     // Match % = sum of weights for skills the user already has. This replaces the old
     // arbitrary "60% floor" approach with a number that's fully traceable to real weights.
-    const normalizedSkills = skills.map(s => s.toLowerCase().trim());
+    const normalizedSkills = normalizeSkillList(skills);
     const matchedJobs = JOBS.map(j => {
-      const present = j.skillReq.filter(r => normalizedSkills.includes(r.skill.toLowerCase()))
-      const missing = j.skillReq.filter(r => !normalizedSkills.includes(r.skill.toLowerCase()));
+      const present = j.skillReq.filter(r => normalizedSkills.some(skill => skillsMatch(skill, r.skill)));
+      const missing = j.skillReq.filter(r => !normalizedSkills.some(skill => skillsMatch(skill, r.skill)));
       const match = present.reduce((sum, r) => sum + r.weight, 0);
       return { ...j, match, present, missing };
     }).sort((a, b) => b.match - a.match);
@@ -930,7 +960,7 @@
       div.innerHTML = `
         <div>
           <div class="job-title">${job.title}</div>
-          <div class="job-meta">${job.company} • ${job.meta}</div>
+          <div class="job-meta">${job.company}</div>
         </div>
         <span class="badge ${job.match >= 90 ? 'badge-hot' : 'badge-new'}">${job.match}% match</span>
       `;
@@ -974,14 +1004,14 @@
         <div style="display:flex;justify-content:space-between;align-items:flex-start;">
           <div>
             <h4 style="font-weight:700;font-size:16px;">${job.title}</h4>
-            <p style="color:var(--muted);font-size:14px;margin:4px 0;">${job.company} • ${job.meta}</p>
+            <p style="color:var(--muted);font-size:14px;margin:4px 0;">${job.company}</p>
             <div class="pill-list" style="margin-top:8px;">
               ${job.present.map(r => `<span class="pill" style="border-color:var(--success);color:var(--success);">${r.skill}</span>`).join('')}
             </div>
           </div>
           <div style="text-align:right;">
             <span class="badge ${job.match >= 70 ? 'badge-hot' : 'badge-new'}" style="display:inline-block;margin-bottom:8px;">${job.match}% Match</span>
-            <div><button class="btn btn-primary" onclick="alert('Applications simulated!')">Apply now</button></div>
+            <a class="btn btn-primary" href="${jobSearchUrl(job.title, job.company)}" target="_blank" rel="noopener noreferrer">Search openings</a>
           </div>
         </div>
         <div style="margin-top:14px;">
@@ -1087,9 +1117,9 @@
       return;
     }
 
-    const skills = (data.skills || []).map(s => s.toLowerCase().trim());
+    const skills = normalizeSkillList(data.skills || []);
     const allMatches = JOBS.map(j => {
-      const present = j.skillReq.filter(r => skills.includes(r.skill.toLowerCase()));
+      const present = j.skillReq.filter(r => skills.some(skill => skillsMatch(skill, r.skill)));
       const match = present.reduce((s, r) => s + r.weight, 0);
       return { title: j.title, match };
     });
@@ -1115,7 +1145,7 @@
             <span class="badge ${eligible ? 'badge-hot' : 'badge-new'}">${eligible ? 'Eligible' : 'Not yet eligible'}</span>
           </div>
           ${eligible
-            ? `<button class="btn btn-primary" style="margin-top:10px;" onclick="alert('Application simulated!')">Apply now</button>`
+            ? `<a class="btn btn-primary" style="margin-top:10px;" href="${jobSearchUrl(drive.role, drive.company)}" target="_blank" rel="noopener noreferrer">Search openings</a>`
             : `<div class="pd-reason">${reasons.join(' ')}</div>`}
         </div>
       `;
@@ -1147,10 +1177,10 @@
 
   function buildMockInterviewSession() {
     const skills = currentResumeData?.skills || [];
-    const normalizedSkills = skills.map(s => s.toLowerCase().trim());
+    const normalizedSkills = normalizeSkillList(skills);
     const allMatches = JOBS.map(j => {
-      const present = j.skillReq.filter(r => normalizedSkills.includes(r.skill.toLowerCase()));
-      const missing = j.skillReq.filter(r => !normalizedSkills.includes(r.skill.toLowerCase()));
+      const present = j.skillReq.filter(r => normalizedSkills.some(skill => skillsMatch(skill, r.skill)));
+      const missing = j.skillReq.filter(r => !normalizedSkills.some(skill => skillsMatch(skill, r.skill)));
       const match = present.reduce((s, r) => s + r.weight, 0);
       return { ...j, match, present, missing };
     }).sort((a, b) => b.match - a.match);
@@ -1252,7 +1282,7 @@
   // 9. Career Intelligence — computed from real match data, not static text
   function renderCareerIntelligence() {
     const skills = currentResumeData?.skills || [];
-    const normalizedSkills = skills.map(s => s.toLowerCase().trim());
+    const normalizedSkills = normalizeSkillList(skills);
     const body = document.getElementById('careerIntelBody');
     if (!body) return;
 
@@ -1263,8 +1293,8 @@
 
     // Match every job, same logic as the dashboard
     const allMatches = JOBS.map(j => {
-      const present = j.skillReq.filter(r => normalizedSkills.includes(r.skill.toLowerCase()));
-      const missing = j.skillReq.filter(r => !normalizedSkills.includes(r.skill.toLowerCase()));
+      const present = j.skillReq.filter(r => normalizedSkills.some(skill => skillsMatch(skill, r.skill)));
+      const missing = j.skillReq.filter(r => !normalizedSkills.some(skill => skillsMatch(skill, r.skill)));
       const match = present.reduce((s, r) => s + r.weight, 0);
       return { ...j, match, present, missing };
     }).sort((a, b) => b.match - a.match);
@@ -1307,7 +1337,7 @@
         <div class="ci-box ci-strength">
           <h4>✅ Strengths</h4>
           <ul>
-            ${skills.slice(0, 8).map(s => `<li>${s}</li>`).join('') || '<li>No skills mapped yet</li>'}
+            ${skills.slice(0, 8).map(s => `<li>${escapeHtml(s)}</li>`).join('') || '<li>No skills mapped yet</li>'}
           </ul>
         </div>
         <div class="ci-box ci-weakness">
@@ -1338,12 +1368,12 @@
 
   function renderSkillGap() {
     const skills = currentResumeData?.skills || [];
-    const normalizedSkills = skills.map(s => s.toLowerCase().trim());
+    const normalizedSkills = normalizeSkillList(skills);
     const job = JOBS[skillGapJobSelect.value];
     if (!job) return;
 
-    const present = job.skillReq.filter(r => normalizedSkills.includes(r.skill.toLowerCase()));
-    const missing = job.skillReq.filter(r => !normalizedSkills.includes(r.skill.toLowerCase()));
+    const present = job.skillReq.filter(r => normalizedSkills.some(skill => skillsMatch(skill, r.skill)));
+    const missing = job.skillReq.filter(r => !normalizedSkills.some(skill => skillsMatch(skill, r.skill)));
     const matchPct = present.reduce((s, r) => s + r.weight, 0);
 
     // Visual: a bar per required skill, green if present, grey if missing
@@ -1351,7 +1381,7 @@
     chartWrap.innerHTML = `
       <h4 style="font-weight:600;font-size:14px;margin-bottom:10px;">Your skill coverage for ${job.title}</h4>
       ${job.skillReq.map(r => {
-        const has = normalizedSkills.includes(r.skill.toLowerCase());
+        const has = normalizedSkills.some(skill => skillsMatch(skill, r.skill));
         return `
           <div class="sg-bar-row">
             <div class="sg-bar-label">${r.skill}</div>
@@ -1434,6 +1464,7 @@
   // Init Data Fetch
   await loadResumeData();
   window.jsLoaded = true;
+  }
 </script>
 </body>
 </html>
