@@ -238,21 +238,27 @@
 <body>
 <div class="dash-wrap">
   <aside class="sidebar">
-    <a href="/" class="logo" style="margin-bottom:12px;">
-      <div class="logo-mark gradient-brand">C</div>
-      <span>CareerPilot</span>
+    <a href="/" class="logo">
+      <div class="logo-mark gradient-brand">∞</div>
+      <span>Infinity AI</span>
     </a>
-    <div class="sidebar-title">Workspace</div>
+    
+    <div class="sidebar-title">Career</div>
     <a class="side-link active" data-tab="dashboard">📊 Dashboard</a>
-    <a class="side-link" data-tab="resume">📄 Resume</a>
-    <a class="side-link" data-tab="jobs">🎯 Job matches</a>
+    <a class="side-link" data-tab="careerintel">🧠 Intelligence</a>
+    <a class="side-link" data-tab="skillgap">🧩 Skill Gaps</a>
     <a class="side-link" data-tab="roadmap">🧭 Roadmap</a>
-    <a class="side-link" data-tab="mentor">🤖 AI Mentor</a>
-    <a class="side-link" data-tab="skillgap">🧩 Skill Gap Analysis</a>
-    <a class="side-link" data-tab="careerintel">🧠 Career Intelligence</a>
+    
+    <div class="sidebar-title">Preparation</div>
+    <a class="side-link" data-tab="resume">📄 Resume Scan</a>
     <a class="side-link" data-tab="mockinterview">🎤 Mock Interview</a>
-    <a class="side-link" data-tab="placement">🏢 Placement Drives</a>
-    <div class="sidebar-title" style="margin-top:auto;">Account</div>
+    <a class="side-link" data-tab="mentor">🤖 AI Mentor</a>
+    
+    <div class="sidebar-title">Opportunities</div>
+    <a class="side-link" data-tab="jobs">🎯 Job Matches</a>
+    <a class="side-link" data-tab="placement">🏢 Placements</a>
+    
+    <div class="sidebar-title" style="margin-top:auto;">System</div>
     <a class="side-link" data-tab="settings">⚙️ Settings</a>
     <button class="side-link" id="signOutBtn" style="text-align:left;">↪ Sign out</button>
   </aside>
@@ -350,38 +356,50 @@
 
     <!-- Dashboard Tab -->
     <div id="dashboardTab" class="tab-content">
-      <div class="grid-3">
-        <div class="card">
-          <div class="score-ring">
-            <svg class="ring-svg" viewBox="0 0 120 120">
-              <defs><linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#06b6d4"/>
-              </linearGradient></defs>
-              <circle class="ring-track" cx="60" cy="60" r="52" fill="none" stroke-width="12"/>
-              <circle class="ring-fill" cx="60" cy="60" r="52" fill="none" stroke-width="12"
-                stroke-dasharray="327" stroke-dashoffset="327" id="ringFill"
-                transform="rotate(-90 60 60)"/>
-            </svg>
-            <div class="score-text">
-              <div class="score-num" id="scoreNum">0</div>
-              <div class="score-label">Career Readiness</div>
-              <div class="metric-trend" id="readinessTrend">Dynamic Score</div>
-            </div>
+      <!-- Premium Hero Readiness Panel -->
+      <div class="card hero-readiness" style="margin-bottom: 20px;">
+        <div class="score-ring">
+          <svg class="ring-svg" viewBox="0 0 120 120">
+            <defs>
+              <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#2563eb"/>
+                <stop offset="100%" stop-color="#06b6d4"/>
+              </linearGradient>
+            </defs>
+            <circle class="ring-track" cx="60" cy="60" r="52" fill="none" stroke-width="10"/>
+            <circle class="ring-fill" cx="60" cy="60" r="52" fill="none" stroke-width="10"
+              stroke-dasharray="327" stroke-dashoffset="327" id="ringFill"
+              transform="rotate(-90 60 60)"/>
+          </svg>
+          <div class="score-center-text">
+            <div class="score-center-num" id="scoreNum">0</div>
+            <div class="score-center-lbl">Readiness</div>
           </div>
         </div>
-        <div class="card metric">
+        <div class="hero-insight-info">
+          <span class="hero-insight-badge" id="readinessTrend">Dynamic Score</span>
+          <h3 style="font-size: 20px; font-weight: 800; letter-spacing: -0.02em; margin-top: 4px; color: var(--fg);">Career Readiness Trajectory</h3>
+          <p style="color: var(--muted); font-size: 14px; line-height: 1.5; margin-top: 2px;" id="aiInsightText">
+            Analyzing your resume metrics and skill definitions...
+          </p>
+        </div>
+      </div>
+
+      <!-- Quick Metrics Grid -->
+      <div class="grid-3">
+        <div class="card metric brand-border">
           <div class="metric-label">Resume score</div>
           <div class="metric-val" id="resumeScoreVal" data-count="0" data-suffix="%">0%</div>
           <div class="progress"><div class="progress-bar" id="resumeProgressBar" style="width:0%;"></div></div>
           <div class="metric-trend">Optimized vs benchmark</div>
         </div>
-        <div class="card metric">
+        <div class="card metric brand-2-border">
           <div class="metric-label">Skills mapped</div>
           <div class="metric-val" id="skillsCountVal" data-count="0">0</div>
           <div class="progress"><div class="progress-bar" id="skillsProgressBar" style="width:0%;"></div></div>
           <div class="metric-trend">Extracted from resume</div>
         </div>
-        <div class="card metric">
+        <div class="card metric brand-3-border">
           <div class="metric-label">Job matches</div>
           <div class="metric-val" id="jobMatchesVal" data-count="0">0</div>
           <div class="progress"><div class="progress-bar" id="jobsProgressBar" style="width:0%;"></div></div>
@@ -391,8 +409,8 @@
 
       <div class="grid-2">
         <div class="card">
-          <h3 style="font-weight:700;font-size:16px;margin-bottom:16px;display:flex;justify-content:space-between;">
-            Top matched roles <a class="side-link" data-tab="jobs" style="color:var(--brand);font-size:13px;">View all</a>
+          <h3 style="font-weight:700;font-size:16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;">
+            Top matched roles <a class="side-link" data-tab="jobs" style="color:var(--brand);font-size:13px;font-weight:600;">View all</a>
           </h3>
           <div id="jobsList">
             <!-- Dynamic jobs go here -->
@@ -400,21 +418,13 @@
         </div>
 
         <div class="card">
-          <h3 style="font-weight:700;font-size:16px;margin-bottom:16px;display:flex;justify-content:space-between;">
-            This week's roadmap <a class="side-link" data-tab="roadmap" style="color:var(--brand);font-size:13px;">View details</a>
+          <h3 style="font-weight:700;font-size:16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;">
+            This week's roadmap <a class="side-link" data-tab="roadmap" style="color:var(--brand);font-size:13px;font-weight:600;">View details</a>
           </h3>
           <div id="roadmapList">
             <!-- Dynamic roadmap items go here -->
           </div>
         </div>
-      </div>
-
-      <div class="card" style="margin-top:20px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-          <h3 style="font-weight:700;font-size:16px;">💡 AI insight of the day</h3>
-          <span class="badge badge-hot">New</span>
-        </div>
-        <p style="color:var(--muted);font-size:14px;" id="aiInsightText">Analyzing your data...</p>
       </div>
     </div>
 
@@ -598,6 +608,7 @@
   import { JOBS } from '/jobs-data.js';
   import { PLACEMENT_DRIVES } from '/placement-data.js';
   import { normalizeSkillList, skillsMatch } from '/skills.js';
+  import { computeResumeScore, computeCareerReadiness } from '/profile-engine.js';
   
   // 1. Force Authentication
   const user = await requireUser();
@@ -847,20 +858,49 @@
         // Hide onboarding, show dashboard content
         document.getElementById('onboardingState').classList.remove('active');
         document.getElementById('dashboardTab').classList.add('active');
+
+        // Dynamic Calculations
+        const profile = {
+          name: data.name,
+          email: data.email,
+          skills: data.skills || [],
+          experience: data.experience || '',
+          education: data.education || '',
+          projects: data.projects || '',
+          raw_text: data.raw_text || ''
+        };
+
+        const resScoreObj = computeResumeScore(profile);
+        const resumeScore = resScoreObj.total;
+
+        // Calculate max matched job score
+        const normalizedSkills = normalizeSkillList(data.skills || []);
+        let maxMatch = 0;
+        JOBS.forEach(j => {
+          const present = j.skillReq.filter(r => normalizedSkills.some(skill => skillsMatch(skill, r.skill)));
+          const match = present.reduce((sum, r) => sum + r.weight, 0);
+          if (match > maxMatch) maxMatch = match;
+        });
+
+        // Get questions answered from mock interview queue
+        const interviewCount = (typeof miResults !== 'undefined') ? miResults.length : 0;
+
+        const readScoreObj = computeCareerReadiness(resumeScore, maxMatch, data.skills?.length || 0, interviewCount);
+        const readinessScore = readScoreObj.total;
+
         // Compute readiness ring
-        const target = data.readiness_score;
         const circumference = 327; // 2*pi*52
         const num = document.getElementById('scoreNum');
         const ring = document.getElementById('ringFill');
-        ring.style.strokeDashoffset = String(circumference - (circumference * target / 100));
-        animateCounter(num, target);
-        document.getElementById('readinessTrend').textContent = target > 75 ? 'Excellent readiness' : 'Room to grow';
+        ring.style.strokeDashoffset = String(circumference - (circumference * readinessScore / 100));
+        animateCounter(num, readinessScore);
+        document.getElementById('readinessTrend').textContent = readinessScore > 75 ? 'Excellent readiness' : 'Room to grow';
 
         // Set scores
         const resVal = document.getElementById('resumeScoreVal');
-        resVal.dataset.count = data.resume_score;
-        animateCounter(resVal, data.resume_score, 1000);
-        document.getElementById('resumeProgressBar').style.width = data.resume_score + '%';
+        resVal.dataset.count = resumeScore;
+        animateCounter(resVal, resumeScore, 1000);
+        document.getElementById('resumeProgressBar').style.width = resumeScore + '%';
 
         const skVal = document.getElementById('skillsCountVal');
         skVal.dataset.count = data.skills?.length || 0;
@@ -888,7 +928,7 @@
         }
 
         // Dynamically build jobs, roadmaps, and insights
-        generateDynamicContent(data.skills, data.name);
+        generateDynamicContent(data.skills, data.name, resumeScore, maxMatch, interviewCount);
         renderCareerIntelligence();
         startMockInterview();
         renderPlacementDrives();
@@ -939,7 +979,7 @@
   }
 
   // 6. Content Generators
-  function generateDynamicContent(skills = [], name = 'there') {
+  function generateDynamicContent(skills = [], name = 'there', resumeScore = 0, maxMatch = 0, interviewCount = 0) {
   // Each job's required skills carry an explicit importance weight that sums to 100.
     // Match % = sum of weights for skills the user already has. This replaces the old
     // arbitrary "60% floor" approach with a number that's fully traceable to real weights.
@@ -1021,11 +1061,13 @@
       `;
       jobsTabList.appendChild(div);
     });
-    // Job matches counter update
+    // Job matches counter update (filter matches >= 30%)
+    const realMatchedJobs = matchedJobs.filter(j => j.match >= 30);
+    const matchedCount = realMatchedJobs.length;
     const jobMatchesVal = document.getElementById('jobMatchesVal');
-    jobMatchesVal.dataset.count = matchedJobs.length;
-    animateCounter(jobMatchesVal, matchedJobs.length, 1000);
-    document.getElementById('jobsProgressBar').style.width = Math.min(100, matchedJobs.length * 15) + '%';
+    jobMatchesVal.dataset.count = matchedCount;
+    animateCounter(jobMatchesVal, matchedCount, 1000);
+    document.getElementById('jobsProgressBar').style.width = Math.min(100, matchedCount * 15) + '%';
 
     // Roadmap Generation
     const allRoadmapItems = [
@@ -1099,12 +1141,35 @@
     let insight = "Your resume has been successfully scanned. Try introducing more numerical parameters (like budgets managed, team members led, or performance gains) under experience to raise your readiness score.";
     if (skills.length < 5) {
       insight = "We noticed your technical list is a bit sparse. Focus on mapping key frontend and layout engineering skills (like React, Tailwind, TypeScript) to stand out for modern software development roles.";
-    } else if (!skills.includes('TypeScript') && skills.includes('JavaScript')) {
-      insight = "Adding TypeScript to your profile can unlock 42% more job matches! Since you already know JavaScript, consider shipping one mini-project in TS this week for an immediate score boost.";
-    } else if (skills.includes('Figma') && !skills.includes('Product Design')) {
+    } else if (!skills.some(s => skillsMatch(s, 'TypeScript')) && skills.some(s => skillsMatch(s, 'JavaScript'))) {
+      const currentMatches = matchedJobs.filter(j => j.match >= 30).length;
+      const tsMatches = matchedJobs.filter(j => {
+        let sim = j.match;
+        const tsReq = j.skillReq.find(r => r.skill.toLowerCase() === 'typescript');
+        if (tsReq) sim += tsReq.weight;
+        return sim >= 30;
+      }).length;
+      const lift = tsMatches - currentMatches;
+      if (lift > 0) {
+        insight = `Adding TypeScript to your profile would qualify you for ${lift} more job match${lift > 1 ? 'es' : ''}! Since you already know JavaScript, consider shipping one mini-project in TS this week.`;
+      } else {
+        insight = "Adding TypeScript would increase your match percentage across your target roles by up to +10%! Consider shipping one mini-project in TS this week.";
+      }
+    } else if (skills.some(s => skillsMatch(s, 'Figma')) && !skills.some(s => skillsMatch(s, 'Product Design'))) {
       insight = "Great work mapping Figma! Employers looking for designers look heavily for 'Product Design' processes. Highlight your workflow and system methodologies for a +10 readiness boost.";
     }
-    document.getElementById('aiInsightText').textContent = insight;
+
+    // Detailed score explainer + dynamic AI insight inside Readiness Hero
+    document.getElementById('aiInsightText').innerHTML = `
+      <div style="margin-bottom:12px;">${insight}</div>
+      <div style="font-size:12px;color:var(--muted);border-top:1px dashed var(--border);padding-top:8px;margin-top:8px;">
+        <strong>Readiness Breakdown:</strong> 
+        Resume Quality: ${resumeScore}/100 (30% weight) • 
+        Top Job Alignment: ${maxMatch}% (40% weight) • 
+        Profile Completeness: ${Math.min(100, skills.length * 10)}% (15% weight) • 
+        Interviews: ${interviewCount} answered (15% weight)
+      </div>
+    `;
   }
   // 8a. Placement Drives — real eligibility check against your resume score and best matching job
   function renderPlacementDrives() {
@@ -1276,6 +1341,9 @@
     const strong = miResults.filter(r => r.checks.every(c => c.pass)).length;
     document.getElementById('miSummary').textContent =
       `You answered ${answered} of ${miQueue.length} questions. ${strong} answer${strong === 1 ? '' : 's'} hit all three quality checks (length, example, metric).`;
+    
+    // Recalculate Career Readiness to include interview activity points
+    loadResumeData();
   }
 
   document.getElementById('miRestartBtn')?.addEventListener('click', startMockInterview);

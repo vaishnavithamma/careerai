@@ -1,5 +1,7 @@
-// Client-side Resume PDF/DOCX Parser for CareerPilot AI
+// Client-side Resume PDF/DOCX Parser for CareerInfinity AI
 import { normalizeSkill } from './skills.js';
+import { computeResumeScore, computeCareerReadiness } from './profile-engine.js';
+
 async function loadScript(src) {
   return new Promise((resolve, reject) => {
     if (document.querySelector(`script[src="${src}"]`)) return resolve();
@@ -33,7 +35,7 @@ async function extractTextFromDocx(arrayBuffer) {
   return result.value;
 }
 
-export function parseResumeText(text) {
+export async function parseResumeText(text) {
   const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
   
   // 1. Extract Email
@@ -161,16 +163,39 @@ export function parseResumeText(text) {
     sections.projects = "Projects list detected in resume. Open Resume tab to review detail.";
   }
 
-  let resumeScore = 50;
-  if (email) resumeScore += 10;
-  if (name && name !== lines[0]) resumeScore += 5;
-  if (skills.length > 3) resumeScore += 10;
-  if (sections.experience) resumeScore += 10;
-  if (sections.education) resumeScore += 10;
-  if (sections.projects) resumeScore += 5;
-  resumeScore = Math.min(100, resumeScore + Math.min(10, skills.length));
+  const parsedProfile = {
+    name,
+    email,
+    skills,
+    experience: sections.experience || '',
+    education: sections.education || '',
+    projects: sections.projects || '',
+    raw_text: text
+  };
+
+  const resumeResult = computeResumeScore(parsedProfile);
+  const resumeScore = resumeResult.total;
   
-  let readinessScore = Math.min(100, Math.round(resumeScore * 0.8 + (skills.length * 1.5)));
+  // Calculate preliminary alignment to initialize readiness
+  let maxMatch = 0;
+  try {
+    // We import JOBS dynamically or check if available to prevent circular deps
+    const { JOBS } = await import('./jobs-data.js');
+    JOBS.forEach(j => {
+      let match = 0;
+      j.skillReq.forEach(req => {
+        if (skills.some(s => s.toLowerCase() === req.skill.toLowerCase())) {
+          match += req.weight;
+        }
+      });
+      if (match > maxMatch) maxMatch = match;
+    });
+  } catch (e) {
+    maxMatch = 0;
+  }
+
+  const readinessResult = computeCareerReadiness(resumeScore, maxMatch, skills.length, 0);
+  const readinessScore = readinessResult.total;
 
   return {
     name,
@@ -199,5 +224,5 @@ export async function parseResumeFile(file) {
   if (!text.trim()) {
     throw new Error('No readable text was found. Please upload a text-based PDF or DOCX file.');
   }
-  return parseResumeText(text);
+  return await parseResumeText(text);
 }
