@@ -1,9 +1,29 @@
 // Centralized Profile, Resume Scoring, and Career Readiness Engine for CareerInfinity AI
 import { normalizeSkillList } from './skills.js';
 
+export function formatEducationToText(educationList) {
+  if (!Array.isArray(educationList)) return String(educationList || '');
+  return educationList.map(e => `${e.degree || ''} in ${e.branch || ''} at ${e.institution || ''} (${e.startYear || ''}-${e.gradYear || 'Present'}), CGPA: ${e.cgpa || ''}`).join('\n');
+}
+
+export function formatExperienceToText(experienceList) {
+  if (!Array.isArray(experienceList)) return String(experienceList || '');
+  return experienceList.map(e => `${e.role || ''} at ${e.company || ''} (${e.startYear || ''}-${e.endYear || 'Present'}). ${e.description || ''}`).join('\n');
+}
+
+export function formatProjectsToText(projectsList) {
+  if (!Array.isArray(projectsList)) return String(projectsList || '');
+  return projectsList.map(p => `${p.title || ''}: ${p.description || ''}. Tech: ${p.technologies || ''}`).join('\n');
+}
+
 export function computeResumeScore(profile) {
   const { email, name, skills = [], experience = '', education = '', projects = '', raw_text = '' } = profile;
   
+  const eduText = formatEducationToText(education);
+  const expTextFormatted = formatExperienceToText(experience);
+  const projTextFormatted = formatProjectsToText(projects);
+  const rawTextCombined = raw_text || `${name || ''} ${email || ''} ${eduText} ${expTextFormatted} ${projTextFormatted}`;
+
   let score = 0;
   const breakdown = {
     contact: 0,
@@ -16,7 +36,7 @@ export function computeResumeScore(profile) {
 
   // 1. Contact Completeness (10 pts)
   const phonePattern = /(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b|\b\d{10}\b/;
-  const hasPhone = phonePattern.test(raw_text);
+  const hasPhone = phonePattern.test(rawTextCombined);
   if (email && (name || hasPhone)) {
     breakdown.contact = 10;
   } else if (email) {
@@ -25,14 +45,14 @@ export function computeResumeScore(profile) {
   score += breakdown.contact;
 
   // 2. Professional Summary Presence (10 pts)
-  const hasSummary = /\b(summary|objective|about me|profile statement|professional profile)\b/i.test(raw_text);
+  const hasSummary = /\b(summary|objective|about me|profile statement|professional profile)\b/i.test(rawTextCombined);
   if (hasSummary) {
     breakdown.summary = 10;
   }
   score += breakdown.summary;
 
   // 3. Education Completeness (20 pts)
-  const eduLen = (education || '').trim().length;
+  const eduLen = eduText.trim().length;
   if (eduLen > 30) {
     breakdown.education = 20;
   } else if (eduLen > 0) {
@@ -41,7 +61,7 @@ export function computeResumeScore(profile) {
   score += breakdown.education;
 
   // 4. Experience Quality (30 pts)
-  const expText = (experience || '').trim();
+  const expText = expTextFormatted.trim();
   if (expText.length > 30) {
     breakdown.experience += 10; // Base presence
     
@@ -62,7 +82,7 @@ export function computeResumeScore(profile) {
   score += breakdown.experience;
 
   // 5. Projects Quality (20 pts)
-  const projText = (projects || '').trim();
+  const projText = projTextFormatted.trim();
   if (projText.length > 30) {
     breakdown.projects = 20;
   } else if (projText.length > 0) {
@@ -71,7 +91,7 @@ export function computeResumeScore(profile) {
   score += breakdown.projects;
 
   // 6. Portfolio/Professional Links (10 pts)
-  const hasLinks = /(github\.com|linkedin\.com|portfolio|http:\/\/|https:\/\/)/i.test(raw_text);
+  const hasLinks = /(github\.com|linkedin\.com|portfolio|http:\/\/|https:\/\/)/i.test(rawTextCombined);
   if (hasLinks) {
     breakdown.links = 10;
   }
@@ -115,7 +135,10 @@ export function calculateProfileCompleteness(profile) {
   let filled = 0;
   const fields = ['email', 'name', 'experience', 'education', 'projects'];
   fields.forEach(f => {
-    if (profile[f] && String(profile[f]).trim().length > 0) {
+    const val = profile[f];
+    if (Array.isArray(val)) {
+      if (val.length > 0) filled++;
+    } else if (val && String(val).trim().length > 0) {
       filled++;
     }
   });

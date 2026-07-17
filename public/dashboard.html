@@ -515,25 +515,55 @@
     <!-- Mock Interview Tab -->
     <!-- Mock Interview Tab -->
     <div id="mockinterviewTab" class="tab-content">
-      <div class="card">
-        <h3>Mock Interview</h3>
-        <p style="color:var(--muted);margin-bottom:16px;">Questions are chosen based on your best-matched role and skill gaps — not random.</p>
-        <div id="miIntro"></div>
-        <div id="miQuestionWrap" style="display:none;">
-          <div style="font-weight:600;font-size:15px;margin-bottom:10px;" id="miQuestionText"></div>
-          <textarea id="miAnswerInput" placeholder="Type your answer here..." style="width:100%;min-height:120px;padding:12px;border:1px solid var(--border);border-radius:8px;background:var(--card);font-family:inherit;font-size:14px;"></textarea>
-          <div style="display:flex;gap:8px;margin-top:10px;">
-            <button class="btn btn-primary" id="miSubmitBtn">Submit answer</button>
-            <button class="btn btn-outline" id="miSkipBtn">Skip question</button>
+      <div class="card mi-card">
+
+        <!-- Landing / start screen -->
+        <div id="miLanding">
+          <h3>Mock Interview</h3>
+          <p style="color:var(--muted);margin-bottom:16px;">A full 3-round hiring simulation — Aptitude, Technical (matched to your top role), and HR — just like a real interview process.</p>
+          <div class="mi-rounds-preview">
+            <div class="mi-round-chip"><span>1</span> Aptitude · 10 MCQs</div>
+            <div class="mi-round-chip"><span>2</span> Technical · role-matched</div>
+            <div class="mi-round-chip"><span>3</span> HR · behavioural</div>
           </div>
-          <div id="miFeedback" style="margin-top:16px;"></div>
+          <div id="miLandingNote" style="color:var(--muted);font-size:13px;margin:12px 0;"></div>
+          <button class="btn btn-primary" id="miStartBtn">Start Interview</button>
         </div>
-        <div id="miDone" style="display:none;text-align:center;padding:20px;">
-          <div style="font-size:40px;margin-bottom:8px;">🎉</div>
-          <h4>Session complete</h4>
-          <p style="color:var(--muted);font-size:14px;margin:8px 0 16px;" id="miSummary"></p>
-          <button class="btn btn-primary" id="miRestartBtn">Start new session</button>
+
+        <!-- Active round: header + question -->
+        <div id="miActive" style="display:none;">
+          <div class="mi-progress-header">
+            <div class="mi-round-indicator" id="miRoundIndicator"></div>
+            <div class="mi-progress-track"><div class="mi-progress-fill" id="miProgressFill"></div></div>
+            <div class="mi-score-tracker" id="miScoreTracker"></div>
+          </div>
+
+          <div class="mi-question-card" id="miQuestionCard">
+            <div class="mi-question-meta" id="miQuestionMeta"></div>
+            <div class="mi-question-text" id="miQuestionText"></div>
+
+            <div id="miMcqOptions" class="mi-mcq-options" style="display:none;"></div>
+            <textarea id="miAnswerInput" class="mi-textarea" style="display:none;" placeholder="Type your answer here..."></textarea>
+
+            <div class="mi-actions">
+              <button class="btn btn-primary" id="miSubmitBtn">Submit answer</button>
+            </div>
+            <div id="miFeedback" style="margin-top:16px;"></div>
+          </div>
         </div>
+
+        <!-- Round-failed screen -->
+        <div id="miRoundFailed" style="display:none;text-align:center;padding:24px;">
+          <div class="mi-result-icon mi-fail">✕</div>
+          <h4 id="miFailTitle">Round not cleared</h4>
+          <p style="color:var(--muted);font-size:14px;margin:8px 0 20px;" id="miFailSummary"></p>
+          <div id="miFailDetail" style="text-align:left;"></div>
+          <button class="btn btn-primary" id="miFailRestartBtn" style="margin-top:20px;">Start new session</button>
+        </div>
+
+        <!-- Final report -->
+        <div id="miFinalReport" style="display:none;"></div>
+
       </div>
     </div>
 
@@ -607,8 +637,9 @@
   import { parseResumeFile } from '/parser.js';
   import { JOBS } from '/jobs-data.js';
   import { PLACEMENT_DRIVES } from '/placement-data.js';
-  import { normalizeSkillList, skillsMatch } from '/skills.js';
+  import { normalizeSkillList, skillsMatch, getSkillDisplayName } from '/skills.js';
   import { computeResumeScore, computeCareerReadiness } from '/profile-engine.js';
+  import { pickAptitudeQuestions, pickTechnicalQuestions, pickHrQuestions, evaluateKeywordAnswer, evaluateHrAnswer } from '/interview-engine.js';
   
   // 1. Force Authentication
   const user = await requireUser();
@@ -883,7 +914,7 @@
         });
 
         // Get questions answered from mock interview queue
-        const interviewCount = (typeof miResults !== 'undefined') ? miResults.length : 0;
+        const interviewCount = (typeof miState !== 'undefined' && miState.answers) ? miState.answers.length : 0;
 
         const readScoreObj = computeCareerReadiness(resumeScore, maxMatch, data.skills?.length || 0, interviewCount);
         const readinessScore = readScoreObj.total;
@@ -930,7 +961,6 @@
         // Dynamically build jobs, roadmaps, and insights
         generateDynamicContent(data.skills, data.name, resumeScore, maxMatch, interviewCount);
         renderCareerIntelligence();
-        startMockInterview();
         renderPlacementDrives();
         renderSkillGap();
       } else {
@@ -1216,137 +1246,296 @@
       `;
     }).join('');
   }
-  // 8b. Mock Interview — questions picked from your real match data, real (rule-based) feedback
-  const QUESTION_BANK = {
-    general: [
-      "Tell me about a project you're proud of and the impact it had.",
-      "Describe a time you had to debug a difficult problem. What was your process?",
-      "How do you prioritize tasks when working on multiple things at once?",
-      "Tell me about a time you disagreed with a teammate. How did you handle it?"
-    ],
-    skillSpecific: {
-      'React': "Walk me through how you'd structure state management in a mid-sized React app.",
-      'Python': "How would you approach optimizing a slow Python script?",
-      'SQL': "Explain the difference between an INNER JOIN and a LEFT JOIN, with an example.",
-      'Machine Learning': "How would you detect and handle overfitting in a model you're training?",
-      'Docker': "Explain what a Dockerfile does and why containerization is useful.",
-      'AWS': "How would you design a simple, cost-conscious deployment on AWS for a small app?",
-      'Node.js': "How do you handle errors in an asynchronous Node.js API?",
-      'Data Science': "Walk me through how you'd approach a dataset with a lot of missing values."
-    }
-  };
-
-  let miQueue = [];
-  let miIndex = 0;
-  let miResults = [];
-
-  function buildMockInterviewSession() {
+  // 8b. Mock Interview — full 3-round hiring simulation (Aptitude -> Technical -> HR).
+  // Technical questions are matched to the candidate's real top Job Match (not random).
+  function getTopJobMatch() {
     const skills = currentResumeData?.skills || [];
     const normalizedSkills = normalizeSkillList(skills);
     const allMatches = JOBS.map(j => {
       const present = j.skillReq.filter(r => normalizedSkills.some(skill => skillsMatch(skill, r.skill)));
       const missing = j.skillReq.filter(r => !normalizedSkills.some(skill => skillsMatch(skill, r.skill)));
-      const match = present.reduce((s, r) => s + r.weight, 0);
-      return { ...j, match, present, missing };
-    }).sort((a, b) => b.match - a.match);
+      const matchPts = present.reduce((s, r) => s + r.weight, 0);
+      const totalPts = j.skillReq.reduce((s, r) => s + r.weight, 0);
+      return { ...j, present, missing, matchPts, matchPct: totalPts ? Math.round((matchPts / totalPts) * 100) : 0 };
+    }).sort((a, b) => b.matchPts - a.matchPts);
+    return { topJob: allMatches[0], allMatches };
+  }
 
-    const topJob = allMatches[0];
-    const questions = [];
+  const MI_PASS = { aptitude: 8, technical: 8 };
 
-    // Pull skill-specific questions for skills relevant to the top matched job (present or missing)
-    if (topJob) {
-      topJob.skillReq.forEach(r => {
-        if (QUESTION_BANK.skillSpecific[r.skill]) {
-          questions.push({ text: QUESTION_BANK.skillSpecific[r.skill], skill: r.skill });
-        }
-      });
+  let miState = {
+    round: null,          // 'aptitude' | 'technical' | 'hr'
+    questions: [],
+    index: 0,
+    answers: [],           // per-round answer records
+    aptitudeScore: 0,
+    technicalScore: 0,
+    hrScore: 0,
+    technicalCategory: '',
+    topJob: null,
+    selectedOption: null
+  };
+
+  function miEl(id) { return document.getElementById(id); }
+
+  document.getElementById('miStartBtn')?.addEventListener('click', () => {
+    const { topJob } = getTopJobMatch();
+    if (!currentResumeData?.skills?.length) {
+      miEl('miLandingNote').textContent = 'Tip: complete your profile first so the Technical round can be matched to a real role — you can still take the interview now.';
     }
-    // Fill with general questions
-    QUESTION_BANK.general.forEach(q => questions.push({ text: q, skill: null }));
-
-    return { topJob, questions: questions.slice(0, 5) };
-  }
-
-  function startMockInterview() {
-    const session = buildMockInterviewSession();
-    miQueue = session.questions;
-    miIndex = 0;
-    miResults = [];
-
-    const intro = document.getElementById('miIntro');
-    if (miQueue.length === 0) {
-      intro.innerHTML = `<p style="color:var(--muted);">Complete your profile first so we can pick relevant questions for you.</p>`;
-      return;
-    }
-    intro.innerHTML = session.topJob
-      ? `<p style="color:var(--muted);margin-bottom:16px;">Based on your top match (<strong>${session.topJob.title}</strong> at ${session.topJob.company}), here are ${miQueue.length} questions.</p>`
-      : '';
-
-    document.getElementById('miQuestionWrap').style.display = 'block';
-    document.getElementById('miDone').style.display = 'none';
-    showMiQuestion();
-  }
-
-  function showMiQuestion() {
-    const q = miQueue[miIndex];
-    document.getElementById('miQuestionText').textContent = `Q${miIndex + 1} of ${miQueue.length}: ${q.text}`;
-    document.getElementById('miAnswerInput').value = '';
-    document.getElementById('miFeedback').innerHTML = '';
-  }
-
-  // Rule-based feedback: real checks, not a fake AI grade.
-  function evaluateAnswer(text) {
-    const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
-    const hasNumbers = /\d/.test(text);
-    const hasExampleWords = /(for example|e\.g\.|specifically|instance|project|built|led|used)/i.test(text);
-
-    const checks = [
-      { label: 'Answer length', pass: wordCount >= 40, note: wordCount >= 40 ? `Good depth (${wordCount} words).` : `Fairly short (${wordCount} words) — aim for 40+ to fully explain your reasoning.` },
-      { label: 'Concrete example', pass: hasExampleWords, note: hasExampleWords ? 'You referenced a specific example — good.' : 'Consider naming a specific project or situation, not just general statements.' },
-      { label: 'Quantified impact', pass: hasNumbers, note: hasNumbers ? 'You included a number/metric — strong signal for interviewers.' : 'Try adding a number (%, time saved, users, etc.) to show measurable impact.' }
-    ];
-    return checks;
-  }
-
-  document.getElementById('miSubmitBtn')?.addEventListener('click', () => {
-    const text = document.getElementById('miAnswerInput').value.trim();
-    if (!text) { toast('Write an answer first', 'error'); return; }
-    const checks = evaluateAnswer(text);
-    miResults.push({ question: miQueue[miIndex].text, checks });
-
-    document.getElementById('miFeedback').innerHTML = checks.map(c => `
-      <div class="mi-fb-box ${c.pass ? 'mi-fb-good' : 'mi-fb-warn'}">
-        <div class="mi-fb-item"><strong>${c.pass ? '✅' : '⚠️'} ${c.label}:</strong> ${c.note}</div>
-      </div>
-    `).join('') + `<button class="btn btn-primary" id="miNextBtn" style="margin-top:12px;">Next question</button>`;
-
-    document.getElementById('miNextBtn').addEventListener('click', advanceMockInterview);
+    miState = { round: 'aptitude', questions: pickAptitudeQuestions(10), index: 0, answers: [], aptitudeScore: 0, technicalScore: 0, hrScore: 0, technicalCategory: '', topJob, selectedOption: null };
+    miEl('miLanding').style.display = 'none';
+    miEl('miRoundFailed').style.display = 'none';
+    miEl('miFinalReport').style.display = 'none';
+    miEl('miActive').style.display = 'block';
+    renderMiQuestion();
   });
 
-  document.getElementById('miSkipBtn')?.addEventListener('click', advanceMockInterview);
+  function roundLabel(round) {
+    return round === 'aptitude' ? 'Round 1 · Aptitude Test'
+      : round === 'technical' ? `Round 2 · Technical (${miState.technicalCategory})`
+      : 'Round 3 · HR Interview';
+  }
 
-  function advanceMockInterview() {
-    miIndex++;
-    if (miIndex >= miQueue.length) {
-      finishMockInterview();
+  function renderMiProgress() {
+    const total = miState.questions.length;
+    const pct = Math.round((miState.index / total) * 100);
+    miEl('miRoundIndicator').innerHTML = `<span>${roundLabel(miState.round)}</span><span>Q${Math.min(miState.index + 1, total)} of ${total}</span>`;
+    miEl('miProgressFill').style.width = pct + '%';
+    const currentScore = miState.round === 'aptitude' ? miState.aptitudeScore : miState.round === 'technical' ? miState.technicalScore : miState.hrScore;
+    miEl('miScoreTracker').textContent = `Score so far: ${currentScore} / ${miState.index}`;
+  }
+
+  function renderMiQuestion() {
+    renderMiProgress();
+    const q = miState.questions[miState.index];
+    miState.selectedOption = null;
+    miEl('miFeedback').innerHTML = '';
+
+    const metaLabel = miState.round === 'aptitude' ? q.category
+      : miState.round === 'hr' ? 'Behavioural'
+      : q.type === 'mcq' ? 'Multiple choice' : q.type === 'code-output' ? 'Code output' : q.type === 'concept' ? 'Concept' : 'Short answer';
+    miEl('miQuestionMeta').textContent = metaLabel;
+    miEl('miQuestionText').textContent = q.text;
+
+    const isMcq = miState.round === 'aptitude' || q.type === 'mcq';
+    const mcqWrap = miEl('miMcqOptions');
+    const textInput = miEl('miAnswerInput');
+
+    if (isMcq) {
+      mcqWrap.style.display = 'flex';
+      textInput.style.display = 'none';
+      const letters = ['A', 'B', 'C', 'D'];
+      mcqWrap.innerHTML = q.options.map((opt, i) => `
+        <div class="mi-option" data-idx="${i}">
+          <span class="mi-option-letter">${letters[i]}</span><span>${opt}</span>
+        </div>
+      `).join('');
+      mcqWrap.querySelectorAll('.mi-option').forEach(el => {
+        el.addEventListener('click', () => {
+          mcqWrap.querySelectorAll('.mi-option').forEach(o => o.classList.remove('selected'));
+          el.classList.add('selected');
+          miState.selectedOption = Number(el.dataset.idx);
+        });
+      });
     } else {
-      showMiQuestion();
+      mcqWrap.style.display = 'none';
+      textInput.style.display = 'block';
+      textInput.value = '';
     }
   }
 
-  function finishMockInterview() {
-    document.getElementById('miQuestionWrap').style.display = 'none';
-    document.getElementById('miDone').style.display = 'block';
-    const answered = miResults.length;
-    const strong = miResults.filter(r => r.checks.every(c => c.pass)).length;
-    document.getElementById('miSummary').textContent =
-      `You answered ${answered} of ${miQueue.length} questions. ${strong} answer${strong === 1 ? '' : 's'} hit all three quality checks (length, example, metric).`;
-    
+  document.getElementById('miSubmitBtn')?.addEventListener('click', handleMiSubmit);
+
+  function handleMiSubmit() {
+    const q = miState.questions[miState.index];
+    const isMcq = miState.round === 'aptitude' || q.type === 'mcq';
+
+    let pass = false;
+    let feedbackHtml = '';
+
+    if (isMcq) {
+      if (miState.selectedOption === null) { toast('Select an option first', 'error'); return; }
+      pass = miState.selectedOption === q.correct;
+      const letters = ['A', 'B', 'C', 'D'];
+      feedbackHtml = `<div class="mi-fb-box ${pass ? 'mi-fb-good' : 'mi-fb-warn'}">
+        <div class="mi-fb-item"><strong>${pass ? '✅ Correct' : '⚠️ Incorrect'}</strong> — correct answer: ${letters[q.correct]}. ${q.explanation ? q.explanation : ''}</div>
+      </div>`;
+    } else if (miState.round === 'hr') {
+      const text = miEl('miAnswerInput').value.trim();
+      if (!text) { toast('Write an answer first', 'error'); return; }
+      const evalResult = evaluateHrAnswer(text, q.keywords);
+      pass = evalResult.pass;
+      feedbackHtml = `<div class="mi-fb-box ${pass ? 'mi-fb-good' : 'mi-fb-warn'}">
+        <div class="mi-fb-item"><strong>${pass ? '✅' : '⚠️'} Relevance:</strong> ${Math.round(evalResult.relevance * 100)}% keyword match, ${evalResult.wordCount} words, confidence signal ${Math.round(evalResult.confidence * 100)}%.</div>
+      </div>`;
+    } else {
+      const text = miEl('miAnswerInput').value.trim();
+      if (!text) { toast('Write an answer first', 'error'); return; }
+      const evalResult = evaluateKeywordAnswer(text, q.keywords || []);
+      pass = evalResult.pass;
+      feedbackHtml = `<div class="mi-fb-box ${pass ? 'mi-fb-good' : 'mi-fb-warn'}">
+        <div class="mi-fb-item"><strong>${pass ? '✅' : '⚠️'} Coverage:</strong> matched ${evalResult.matched.length}/${(q.keywords || []).length} key concepts${evalResult.missed.length ? ` (missing: ${evalResult.missed.join(', ')})` : ''}.</div>
+      </div>`;
+    }
+
+    if (miState.round === 'aptitude') miState.aptitudeScore += pass ? 1 : 0;
+    else if (miState.round === 'technical') miState.technicalScore += pass ? 1 : 0;
+    else miState.hrScore += pass ? 1 : 0;
+
+    miState.answers.push({ round: miState.round, question: q.text, pass });
+
+    miEl('miFeedback').innerHTML = feedbackHtml + `<button class="btn btn-primary" id="miNextBtn" style="margin-top:12px;">Next</button>`;
+    miEl('miSubmitBtn').style.display = 'none';
+    miEl('miNextBtn').addEventListener('click', advanceMiQuestion);
+  }
+
+  function advanceMiQuestion() {
+    miEl('miSubmitBtn').style.display = 'inline-flex';
+    miState.index++;
+    if (miState.index >= miState.questions.length) {
+      finishMiRound();
+    } else {
+      renderMiQuestion();
+    }
+  }
+
+  function finishMiRound() {
+    if (miState.round === 'aptitude') {
+      if (miState.aptitudeScore >= MI_PASS.aptitude) {
+        const { category, questions } = pickTechnicalQuestions(miState.topJob, 10);
+        miState.technicalCategory = category;
+        miState.round = 'technical';
+        miState.questions = questions;
+        miState.index = 0;
+        renderMiQuestion();
+      } else {
+        showMiRoundFailed('aptitude');
+      }
+    } else if (miState.round === 'technical') {
+      if (miState.technicalScore >= MI_PASS.technical) {
+        miState.round = 'hr';
+        miState.questions = pickHrQuestions();
+        miState.index = 0;
+        renderMiQuestion();
+      } else {
+        showMiRoundFailed('technical');
+      }
+    } else {
+      showMiFinalReport();
+    }
+  }
+
+  function showMiRoundFailed(round) {
+    miEl('miActive').style.display = 'none';
+    miEl('miRoundFailed').style.display = 'block';
+    const score = round === 'aptitude' ? miState.aptitudeScore : miState.technicalScore;
+    const needed = MI_PASS[round];
+    miEl('miFailTitle').textContent = round === 'aptitude' ? 'Aptitude round not cleared' : 'Technical round not cleared';
+    miEl('miFailSummary').textContent = `You scored ${score}/10 — you need at least ${needed}/10 to advance to the next round.`;
+
+    const roundAnswers = miState.answers.filter(a => a.round === round);
+    const wrongAnswers = roundAnswers.filter(a => !a.pass);
+    const weakAreas = round === 'aptitude'
+      ? [...new Set(miState.questions
+          .filter((q, i) => roundAnswers[i] && !roundAnswers[i].pass)
+          .map(q => q.category))]
+      : [];
+
+    let detailHtml = `<h5 style="font-size:14px;font-weight:700;margin-bottom:10px;">What to review</h5>`;
+    if (wrongAnswers.length) {
+      detailHtml += wrongAnswers.map(a => `<div class="mi-fail-row"><span>${a.question}</span><span style="color:var(--danger);font-weight:700;">✕</span></div>`).join('');
+    }
+    if (weakAreas.length) {
+      detailHtml += `<h5 style="font-size:14px;font-weight:700;margin:16px 0 10px;">Weak areas</h5><div class="mi-tag-list">${weakAreas.map(w => `<span class="mi-tag mi-tag-weak">${w}</span>`).join('')}</div>`;
+    }
+    detailHtml += `<h5 style="font-size:14px;font-weight:700;margin:16px 0 10px;">Improvement tips</h5>
+      <p style="color:var(--muted);font-size:13px;">${round === 'aptitude'
+        ? 'Practice timed quant/logical/verbal/data-interpretation sets daily and revisit the categories you missed above.'
+        : `Strengthen your fundamentals in ${miState.technicalCategory} — revisit core concepts and practice explaining them out loud before retrying.`}</p>`;
+    miEl('miFailDetail').innerHTML = detailHtml;
+  }
+
+  document.getElementById('miFailRestartBtn')?.addEventListener('click', resetMiToLanding);
+
+  function resetMiToLanding() {
+    miEl('miRoundFailed').style.display = 'none';
+    miEl('miFinalReport').style.display = 'none';
+    miEl('miActive').style.display = 'none';
+    miEl('miLanding').style.display = 'block';
+  }
+
+  function overallStatus(pct) {
+    if (pct >= 80) return { label: 'Excellent', cls: 'mi-status-excellent' };
+    if (pct >= 60) return { label: 'Good', cls: 'mi-status-good' };
+    return { label: 'Needs Improvement', cls: 'mi-status-needs' };
+  }
+
+  function showMiFinalReport() {
+    miEl('miActive').style.display = 'none';
+    const { topJob, allMatches } = getTopJobMatch();
+    const overallPct = Math.round(((miState.aptitudeScore + miState.technicalScore + miState.hrScore) / 30) * 100);
+    const status = overallStatus(overallPct);
+
+    const skills = currentResumeData?.skills || [];
+    const normalizedSkills = normalizeSkillList(skills);
+    const strongSkills = normalizedSkills.slice(0, 6).map(s => getSkillDisplayNameSafe(s));
+    const weakSkills = (topJob?.missing || []).slice(0, 6).map(r => r.skill);
+
+    const recommendedRoles = (allMatches || []).slice(0, 3).map(j => `${j.title} · ${j.company}`);
+
+    const chance = Math.min(95, Math.max(5, overallPct - 5));
+
+    miEl('miFinalReport').style.display = 'block';
+    miEl('miFinalReport').innerHTML = `
+      <div class="mi-status-banner ${status.cls}">
+        <div style="font-size:36px;font-weight:800;">${overallPct}%</div>
+        <div style="font-weight:700;margin-top:4px;">${status.label}</div>
+        <div style="color:var(--muted);font-size:13px;margin-top:6px;">Overall Hiring Score across all 3 rounds</div>
+      </div>
+
+      <div class="mi-report-grid">
+        <div class="mi-report-stat"><div class="mi-stat-value">${miState.aptitudeScore}/10</div><div class="mi-stat-label">Aptitude</div></div>
+        <div class="mi-report-stat"><div class="mi-stat-value">${miState.technicalScore}/10</div><div class="mi-stat-label">Technical</div></div>
+        <div class="mi-report-stat"><div class="mi-stat-value">${miState.hrScore}/10</div><div class="mi-stat-label">HR</div></div>
+        <div class="mi-report-stat"><div class="mi-stat-value">${chance}%</div><div class="mi-stat-label">Est. Selection Chance</div></div>
+      </div>
+
+      <div class="mi-report-section">
+        <h5>Recommended roles</h5>
+        <div class="mi-tag-list">${recommendedRoles.map(r => `<span class="mi-tag">${r}</span>`).join('') || '<span style="color:var(--muted);font-size:13px;">Complete your profile to see matches.</span>'}</div>
+      </div>
+
+      <div class="mi-report-section">
+        <h5>Strong skills</h5>
+        <div class="mi-tag-list">${strongSkills.map(s => `<span class="mi-tag mi-tag-strong">${s}</span>`).join('') || '<span style="color:var(--muted);font-size:13px;">No skills on file yet.</span>'}</div>
+      </div>
+
+      <div class="mi-report-section">
+        <h5>Topics to learn</h5>
+        <div class="mi-tag-list">${weakSkills.map(s => `<span class="mi-tag mi-tag-weak">${s}</span>`).join('') || '<span style="color:var(--muted);font-size:13px;">No major gaps detected against your top match.</span>'}</div>
+      </div>
+
+      <div class="mi-report-section">
+        <h5>Resume &amp; interview tips</h5>
+        <p style="color:var(--muted);font-size:13px;line-height:1.6;">
+          ${overallPct >= 80 ? 'Strong performance across all rounds — focus on tightening your resume\'s quantified impact statements and keep practicing HR storytelling.' : ''}
+          ${overallPct >= 60 && overallPct < 80 ? 'Solid foundation. Revisit the topics listed above and practice explaining technical concepts concisely before your next attempt.' : ''}
+          ${overallPct < 60 ? 'Focus on core fundamentals for the topics above, and rebuild your resume around specific, quantified project outcomes before your next mock interview.' : ''}
+        </p>
+      </div>
+
+      <button class="btn btn-primary" id="miReportRestartBtn" style="margin-top:20px;">Start new session</button>
+    `;
+    document.getElementById('miReportRestartBtn')?.addEventListener('click', resetMiToLanding);
+
     // Recalculate Career Readiness to include interview activity points
     loadResumeData();
   }
 
-  document.getElementById('miRestartBtn')?.addEventListener('click', startMockInterview);
+  function getSkillDisplayNameSafe(s) {
+    try { return getSkillDisplayName(s); } catch { return s; }
+  }
   // 9. Career Intelligence — computed from real match data, not static text
   function renderCareerIntelligence() {
     const skills = currentResumeData?.skills || [];
