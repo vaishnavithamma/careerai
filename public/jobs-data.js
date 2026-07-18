@@ -11,8 +11,8 @@ export const JOBS = [
       { skill: "Deep Learning", weight: 15, importance: "important" },
       { skill: "SQL", weight: 10, importance: "important" },
       { skill: "Git", weight: 10, importance: "important" },
-      { skill: "Docker", weight: 10, importance: "nice" }
-    ]
+      { skill: "Docker", weight: 10, importance: "nice" },
+    ],
   },
 
   {
@@ -25,8 +25,8 @@ export const JOBS = [
       { skill: "React", weight: 20, importance: "important" },
       { skill: "TypeScript", weight: 10, importance: "important" },
       { skill: "Git", weight: 10, importance: "important" },
-      { skill: "Responsive Design", weight: 10, importance: "nice" }
-    ]
+      { skill: "Responsive Design", weight: 10, importance: "nice" },
+    ],
   },
 
   {
@@ -39,8 +39,8 @@ export const JOBS = [
       { skill: "REST API", weight: 15, importance: "important" },
       { skill: "Docker", weight: 10, importance: "important" },
       { skill: "Git", weight: 10, importance: "important" },
-      { skill: "AWS", weight: 10, importance: "nice" }
-    ]
+      { skill: "AWS", weight: 10, importance: "nice" },
+    ],
   },
 
   {
@@ -53,8 +53,8 @@ export const JOBS = [
       { skill: "MongoDB", weight: 15, importance: "important" },
       { skill: "JavaScript", weight: 15, importance: "critical" },
       { skill: "Git", weight: 10, importance: "important" },
-      { skill: "Docker", weight: 15, importance: "nice" }
-    ]
+      { skill: "Docker", weight: 15, importance: "nice" },
+    ],
   },
 
   {
@@ -66,8 +66,8 @@ export const JOBS = [
       { skill: "Docker", weight: 15, importance: "important" },
       { skill: "Kubernetes", weight: 20, importance: "critical" },
       { skill: "Linux", weight: 15, importance: "important" },
-      { skill: "Git", weight: 15, importance: "important" }
-    ]
+      { skill: "Git", weight: 15, importance: "important" },
+    ],
   },
 
   {
@@ -79,8 +79,8 @@ export const JOBS = [
       { skill: "Jenkins", weight: 20, importance: "critical" },
       { skill: "Linux", weight: 15, importance: "important" },
       { skill: "Git", weight: 10, importance: "important" },
-      { skill: "AWS", weight: 15, importance: "important" }
-    ]
+      { skill: "AWS", weight: 15, importance: "important" },
+    ],
   },
 
   {
@@ -92,8 +92,8 @@ export const JOBS = [
       { skill: "NumPy", weight: 15, importance: "important" },
       { skill: "Machine Learning", weight: 20, importance: "critical" },
       { skill: "SQL", weight: 15, importance: "important" },
-      { skill: "Data Visualization", weight: 15, importance: "important" }
-    ]
+      { skill: "Data Visualization", weight: 15, importance: "important" },
+    ],
   },
 
   {
@@ -104,8 +104,8 @@ export const JOBS = [
       { skill: "Excel", weight: 20, importance: "critical" },
       { skill: "Power BI", weight: 20, importance: "important" },
       { skill: "Python", weight: 15, importance: "important" },
-      { skill: "Statistics", weight: 20, importance: "important" }
-    ]
+      { skill: "Statistics", weight: 20, importance: "important" },
+    ],
   },
 
   {
@@ -117,8 +117,34 @@ export const JOBS = [
       { skill: "Cybersecurity", weight: 25, importance: "critical" },
       { skill: "Python", weight: 10, importance: "important" },
       { skill: "SIEM", weight: 15, importance: "important" },
-      { skill: "Risk Assessment", weight: 15, importance: "important" }
-    ]
+      { skill: "Risk Assessment", weight: 15, importance: "important" },
+    ],
+  },
+
+  {
+    title: "Technical Support Engineer",
+    company: "Microsoft",
+    skillReq: [
+      { skill: "Networking", weight: 20, importance: "critical" },
+      { skill: "Linux", weight: 15, importance: "important" },
+      { skill: "Active Directory", weight: 25, importance: "critical" },
+      { skill: "Troubleshooting", weight: 10, importance: "important" },
+      { skill: "Incident Response", weight: 15, importance: "important" },
+      { skill: "Jira", weight: 15, importance: "important" },
+    ],
+  },
+
+  {
+    title: "Service Desk Support",
+    company: "Amazon",
+    skillReq: [
+      { skill: "Networking", weight: 20, importance: "critical" },
+      { skill: "TCP/IP", weight: 15, importance: "important" },
+      { skill: "Active Directory", weight: 25, importance: "critical" },
+      { skill: "Troubleshooting", weight: 10, importance: "important" },
+      { skill: "Incident Response", weight: 15, importance: "important" },
+      { skill: "Ticketing Software", weight: 15, importance: "important" },
+    ],
   },
 
   {
@@ -130,34 +156,81 @@ export const JOBS = [
       { skill: "Firebase", weight: 20, importance: "important" },
       { skill: "REST API", weight: 15, importance: "important" },
       { skill: "Git", weight: 10, importance: "important" },
-      { skill: "UI Design", weight: 15, importance: "nice" }
-    ]
-  }
+      { skill: "UI Design", weight: 15, importance: "nice" },
+    ],
+  },
 ];
 
 // Extra jobs to make 20 total
 
 const extraJobs = [
-  ["QA Engineer","Accenture",["Java","Selenium","JUnit","Git","SQL","Automation"]],
-  ["UI/UX Designer","Zoho",["Figma","UI Design","Wireframing","Prototyping","HTML","CSS"]],
-  ["Blockchain Developer","Coinbase",["Solidity","Ethereum","JavaScript","Git","Node.js","Web3"]],
-  ["Game Developer","Ubisoft",["C++","Unity","Game Physics","Git","OOP","AI"]],
-  ["ML Researcher","OpenAI",["Python","PyTorch","Deep Learning","Transformers","Mathematics","Research"]],
-  ["Database Engineer","Oracle",["SQL","PL/SQL","Database Design","Performance Tuning","Linux","Git"]],
-  ["Network Engineer","TCS",["Networking","Cisco","Linux","Firewall","Routing","Security"]],
-  ["Embedded Systems Engineer","Intel",["C","C++","Embedded Systems","RTOS","Debugging","Git"]],
-  ["Software Engineer","Apple",["C++","Data Structures","Algorithms","Git","OOP","System Design"]],
-  ["Site Reliability Engineer","Meta",["Linux","Docker","Kubernetes","Python","AWS","Monitoring"]]
+  [
+    "QA Engineer",
+    "Accenture",
+    ["Java", "Selenium", "JUnit", "Git", "SQL", "Automation"],
+  ],
+  [
+    "UI/UX Designer",
+    "Zoho",
+    ["Figma", "UI Design", "Wireframing", "Prototyping", "HTML", "CSS"],
+  ],
+  [
+    "Blockchain Developer",
+    "Coinbase",
+    ["Solidity", "Ethereum", "JavaScript", "Git", "Node.js", "Web3"],
+  ],
+  [
+    "Game Developer",
+    "Ubisoft",
+    ["C++", "Unity", "Game Physics", "Git", "OOP", "AI"],
+  ],
+  [
+    "ML Researcher",
+    "OpenAI",
+    [
+      "Python",
+      "PyTorch",
+      "Deep Learning",
+      "Transformers",
+      "Mathematics",
+      "Research",
+    ],
+  ],
+  [
+    "Database Engineer",
+    "Oracle",
+    ["SQL", "PL/SQL", "Database Design", "Performance Tuning", "Linux", "Git"],
+  ],
+  [
+    "Network Engineer",
+    "TCS",
+    ["Networking", "Cisco", "Linux", "Firewall", "Routing", "Security"],
+  ],
+  [
+    "Embedded Systems Engineer",
+    "Intel",
+    ["C", "C++", "Embedded Systems", "RTOS", "Debugging", "Git"],
+  ],
+  [
+    "Software Engineer",
+    "Apple",
+    ["C++", "Data Structures", "Algorithms", "Git", "OOP", "System Design"],
+  ],
+  [
+    "Site Reliability Engineer",
+    "Meta",
+    ["Linux", "Docker", "Kubernetes", "Python", "AWS", "Monitoring"],
+  ],
 ];
 
-extraJobs.forEach(job => {
+extraJobs.forEach((job) => {
   JOBS.push({
     title: job[0],
     company: job[1],
     skillReq: job[2].map((skill, index) => ({
       skill,
-      weight: [20,20,15,15,15,15][index],
-      importance: index < 2 ? "critical" : "important"
-    }))
+      weight: [20, 20, 15, 15, 15, 15][index],
+      importance: index < 2 ? "critical" : "important",
+    })),
   });
 });
