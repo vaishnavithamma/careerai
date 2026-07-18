@@ -730,3 +730,60 @@ footer.site-footer {
     background:linear-gradient(90deg,var(--brand),var(--brand-2));
     transition:width .3s;
 }
+
+/* Bottom Features Grid */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  z-index: 10;
+}
+
+.feature-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 1rem;
+  padding: 1rem;
+  backdrop-filter: blur(8px);
+}
+
+/*.feature-icon-wrapper {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-light-secondary);
+  background: rgba(255, 255, 255, 0.05);
+} */
+
+.feature-icon-wrapper svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.feature-title {
+  font-family: var(--font-heading);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.feature-desc {
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--text-light-muted);
+}
+
+.left-panel-footer {
+  font-size: 0.75rem;
+  color: var(--text-light-muted);
+  opacity: 0.65;
+  margin-top: 1.5rem;
+  z-index: 10;
+}
